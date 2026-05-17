@@ -109,6 +109,7 @@ Referer: https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html
 ## 5. 注意事项
 
 - 所有 API 需要 `User-Agent` 和 `Referer` 头
-- 响应编码为 UTF-8
+- 响应编码为 UTF-8，但终端可能显示为 GBK 乱码，始终用 hex 验证: `str.encode('utf-8').hex()`
 - 建议请求间隔 ≥ 300ms 避免限流
-- NextJS build hash (`nextweb-prod-c_1.0.234-p_2.36.0`) 可能随部署更新
+- NextJS build hash (`nextweb-prod-c_1.0.234-p_2.36.0`) 可能随部署更新，失效时从页面源码 `<script id="__NEXT_DATA__">` 中提取最新值
+- `fctName` 去掉末尾品牌名后仍可能含 `汽车`/`集团` 后缀，需二次清洗 (见 `collect.py` 的 `clean_manu_name`)
