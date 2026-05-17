@@ -32,6 +32,7 @@ GBK/UTF-8 混用导致品牌名误判。始终用 hex 值验证：`name.encode('
 
 | 文件 | 说明 |
 |------|------|
-| [collect.py](collect.py) | 主抓取脚本，含品牌-主机厂映射 |
+| [collect.py](collect.py) | 销量排行榜采集，含品牌-主机厂映射 |
+| [config_spec.py](config_spec.py) | 在售车型参数配置表采集 |
 | [docs/autohome-api.md](docs/autohome-api.md) | 汽车之家 API 文档与参数 |
 | [tools/verify.py](tools/verify.py) | xlsx 输出验证脚本 |

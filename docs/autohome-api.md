@@ -110,6 +110,33 @@ Referer: https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html
 
 - 所有 API 需要 `User-Agent` 和 `Referer` 头
 - 响应编码为 UTF-8，但终端可能显示为 GBK 乱码，始终用 hex 验证: `str.encode('utf-8').hex()`
-- 建议请求间隔 ≥ 300ms 避免限流
+- 建议请求间隔 ≥ 150ms 避免限流
 - NextJS build hash (`nextweb-prod-c_1.0.234-p_2.36.0`) 可能随部署更新，失效时从页面源码 `<script id="__NEXT_DATA__">` 中提取最新值
 - `fctName` 去掉末尾品牌名后仍可能含 `汽车`/`集团` 后缀，需二次清洗 (见 `collect.py` 的 `clean_manu_name`)
+
+## 6. 参数配置 API
+
+用于获取车系的在售车型参数配置表。
+
+**URL:** `https://www.autohome.com.cn/web-main/car/param/getParamConf`
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| mode | 固定 1 | 1 |
+| site | 固定 1 | 1 |
+| seriesid | 车系ID | 3171 |
+| yearid | 可选，筛选年款 | 2025 |
+
+**返回字段 (result):**
+
+| 字段 | 说明 |
+|------|------|
+| bread | 品牌/车系元数据 (brandid, brandname, seriesid, seriesname) |
+| conditionlist | 筛选条件列表：年款 (typevalue="year")、排量、变速箱等 |
+| titlelist | 参数定义，按组组织 (itemtype=组名, items=参数列表) |
+| datalist | 规格列表，每个规格含 specname、paramconflist (对应 titlelist 的值) |
+
+**年款判断:** `conditionlist[0].list[]` 含所有年款，`lazyload:0`=在售。
+规格的 `condition` 数组末位为年份值。
+
+**输出脚本:** `config_spec.py`，开关 `ONLY_ON_SALE = True/False` 控制在售/全部年款。
