@@ -133,8 +133,20 @@ Referer: https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html
 |------|------|
 | bread | 品牌/车系元数据 (brandid, brandname, seriesid, seriesname) |
 | conditionlist | 筛选条件列表：年款 (typevalue="year")、排量、变速箱等 |
-| titlelist | 参数定义，按组组织 (itemtype=组名, items=参数列表) |
-| datalist | 规格列表，每个规格含 specname、paramconflist (对应 titlelist 的值) |
+| titlelist | 参数定义，按组组织 (itemtype=组名, items=参数列表, 每个item有titleid) |
+| datalist | 规格列表，每个规格含 specname、paramconflist (通过titleid对齐titlelist) |
+
+**paramconflist 值格式:**
+
+| 格式 | titleid=例 | itemname | colorinfo | sublist | 渲染结果 |
+|------|-----------|----------|-----------|---------|---------|
+| 普通值 | 113(车型名称) | `"秦PLUS"` | null | [] | 直接显示 |
+| 空值/N/A | 85(驱动方式) | `"-"` 或 `None` | null | [] | 显示 `-` |
+| 颜色 | 267(内饰颜色) | `None` | `{list:[{name:"星云灰",value:"#DAD9DF"}]}` | null | CellRichText着色 |
+| 混色 | 268(外饰颜色) | `None` | `{list:[{name:"黑色/雪隐灰",value:"#000000/#E7DDD5"}]}` | null | 拆分后每段独立着色 |
+| 子列表 | 179(天窗) | `""` | null | `[{name:"电动天窗",value:"●"}]` | `电动天窗: ●` |
+
+**颜色渲染:** `_param_value()` 使用 `CellRichText` + `InlineFont(color="FF"+hex)` 将颜色名以自身RGB着色。混色名(含`/`)按`/`拆分为多段，每段独立着色，分隔符`/`用默认色。openpyxl回读时只显示纯文本属正常——颜色数据已写入XML `<rPr><color rgb="FF..."/></rPr>`。
 
 **年款判断:** `conditionlist[0].list[]` 含所有年款，`lazyload:0`=在售。
 规格的 `condition` 数组末位为年份值。
@@ -142,4 +154,10 @@ Referer: https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html
 **输出脚本:** `src/config_spec.py`，开关 `ONLY_ON_SALE = True/False` 控制在售/全部年款。
 输出目录: `output/{YYYYMMDDHHMMSSmmm}/` (自动创建时间戳子目录)。
 
-参数值的 `colorinfo`（颜色）和 `sublist`（多值项如钥匙类型）在 `_param_value()` 中处理，以换行符拼接多值。
+---
+
+## 7. 动态月份检测
+
+排名页 NextJS 数据的 `pageProps.options.subranklist[0].toplist` 中 `parameter="date"` 的 list 包含可用月份。`_` 分隔的是范围(如`2026-02_2026-04`)，过滤后取前N个单项即得最新月份列表。
+
+对应函数: `src/api.py` 的 `fetch_available_months()`, `get_latest_month()`, `get_months(n)`。
