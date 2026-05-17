@@ -2,18 +2,71 @@
 import time
 import re
 import os
+import json
 from datetime import datetime
+from pathlib import Path
 from collections import defaultdict
 
 from openpyxl.cell.rich_text import TextBlock, CellRichText
 from openpyxl.cell.text import InlineFont
 
-from .api import fetch_brand_map, fetch_all_series, get_param_config
+from .api import fetch_brand_map, fetch_series, fetch_series_by_level, get_param_config, get_latest_month
 from .brands import clean_manu_name, create_manu_map, resolve_brands
 from .excel_writer import write_config_xlsx
 
-OUTPUT_DIR = "D:/Projects/Program/parse_autohome/output"
+OUTPUT_DIR = "D:/Projects/Program/carmine/output"
 ONLY_ON_SALE = True  # True=仅在售年款, False=全部年款
+
+# Category selection mode:
+#   "sales" → top-selling series only (uses brands.CATEGORIES: 轿车/SUV/MPV)
+#   "all"   → all categories including 跑车/皮卡/微卡/轻客/微面
+#   ["跑车", "皮卡"] → only specified categories
+CATEGORY_MODE = "sales"
+
+_DATA_DIR = Path(__file__).parent / "data"
+
+
+def _load_categories(mode):
+    """Load category definitions based on mode."""
+    from .brands import CATEGORIES
+    if mode == "sales":
+        return CATEGORIES
+    if mode == "all":
+        with open(_DATA_DIR / "all_categories.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    if isinstance(mode, list):
+        all_cats = json.load(open(_DATA_DIR / "all_categories.json", "r", encoding="utf-8"))
+        return {k: v for k, v in all_cats.items() if k in mode}
+    return CATEGORIES
+
+
+def build_series_list(categories):
+    """Build series list from categories, falling back to price API for categories without rank data."""
+    all_series = {}
+    for cat_big, subcats in categories.items():
+        for sub_name, levelid in subcats:
+            items = fetch_series(levelid, get_latest_month())
+            if items:
+                for item in items:
+                    sid = str(item.get("seriesid", ""))
+                    if sid and sid not in all_series:
+                        all_series[sid] = {
+                            "name": item.get("seriesname", ""),
+                            "brandid": item.get("brandid", 0),
+                        }
+            else:
+                # Fallback: fetch from price page
+                series_map = fetch_series_by_level(levelid)
+                for sid, info in series_map.items():
+                    if sid not in all_series:
+                        all_series[sid] = {
+                            "name": info["name"],
+                            "brandid": info.get("brandid", 0),
+                            "fctname": info.get("fctname", ""),
+                        }
+            time.sleep(0.2)
+    print(f"Collected {len(all_series)} unique series")
+    return all_series
 
 
 def _param_value(param_item):
@@ -123,7 +176,8 @@ def main():
     manu_map = create_manu_map(brand_map)
 
     print("=== Step 2: Collecting all series ===")
-    all_series = fetch_all_series()
+    categories = _load_categories(CATEGORY_MODE)
+    all_series = build_series_list(categories)
     series_by_brand = defaultdict(list)
     for sid, info in all_series.items():
         bid = info["brandid"]

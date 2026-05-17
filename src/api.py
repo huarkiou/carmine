@@ -3,7 +3,7 @@ import time
 import re
 import requests
 
-from .brands import MONTHS, CATEGORIES
+from .brands import MONTHS
 
 
 def get_latest_month():
@@ -101,22 +101,29 @@ def fetch_series(levelid, month):
         return []
 
 
-def fetch_all_series():
-    """Collect all unique series from ranking data across all categories."""
-    all_series = {}
-    for cat_big, subcats in CATEGORIES.items():
-        for sub_name, levelid in subcats:
-            items = fetch_series(levelid, get_latest_month())
-            for item in items:
-                sid = str(item.get("seriesid", ""))
-                if sid and sid not in all_series:
-                    all_series[sid] = {
-                        "name": item.get("seriesname", ""),
-                        "brandid": item.get("brandid", 0),
-                    }
-            time.sleep(0.2)
-    print(f"Collected {len(all_series)} unique series")
-    return all_series
+def fetch_series_by_level(levelid):
+    """Fetch all series for a given levelid from the price page API.
+    
+    Used as fallback for categories without sales ranking data (e.g., 皮卡, 轻客).
+    """
+    try:
+        url = f"{NEXTJS_DATA}/price/levelid_{levelid}.json"
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        r.encoding = "utf-8"
+        data = r.json()
+        sgl = data.get("pageProps", {}).get("seriesList", {}).get("seriesgrouplist", [])
+        series_list = {}
+        for s in sgl:
+            sid = str(s.get("seriesid", ""))
+            if sid and sid not in series_list:
+                series_list[sid] = {
+                    "name": s.get("seriesname", ""),
+                    "brandid": 0,  # will be resolved later
+                    "fctname": s.get("fctname", ""),
+                }
+        return series_list
+    except Exception:
+        return {}
 
 
 def get_param_config(seriesid):

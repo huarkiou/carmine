@@ -3,10 +3,16 @@
 ## 数据管道
 
 ```
-src/collect.py    → 调用 rank API → 动态取最新6个月 → 聚合销量 → 输出 xlsx
-src/config_spec.py → 调用 config API → 遍历车系取配置表 → 按主机厂/品牌/车型输出 xlsx
+src/fetch_sales.py  → 调用 rank API → 动态取最新6个月 → 聚合销量 → 输出 xlsx
+src/fetch_specs.py  → 调用 config API → 遍历车系取配置表 → 按主机厂/品牌/车型输出 xlsx
 ```
 
+`fetch_specs.py` 通过 `CATEGORY_MODE` 控制车系范围：
+- `"sales"` → 销量靠前车型（轿车/SUV/MPV）
+- `"all"` → 全部类别含跑车/皮卡等
+- `["跑车"]` → 仅指定类别
+
+对 rank API 无数据的分类（皮卡/微卡/轻客），自动 fallback 到 price 页 API 获取车系列表。
 详情见 [docs/autohome-api.md](docs/autohome-api.md)
 
 ## 品牌映射策略
@@ -30,7 +36,7 @@ GBK/UTF-8 混用导致品牌名误判。始终用 hex 验证：`name.encode('utf
 
 ## 配置表数据解析
 
-`_param_value()` 处理三种格式 (见 [src/config_spec.py](src/config_spec.py))：
+`_param_value()` 处理三种格式 (见 [src/fetch_specs.py](src/fetch_specs.py))：
 
 | 格式 | 示例 | 处理 |
 |------|------|------|
@@ -60,13 +66,15 @@ src/
 ├── api.py           # API 端点、动态月份、fetch 函数
 ├── brands.py        # 品牌解析管道、名称清洗
 ├── excel_writer.py  # xlsx 输出、共享样式
-├── collect.py       # 销量榜采集（编排）
-├── config_spec.py   # 配置表采集（编排，含 _param_value）
+├── fetch_sales.py   # 销量榜采集（编排）
+├── fetch_specs.py   # 配置表采集（编排，含 _param_value、CATEGORY_MODE）
 └── data/
     ├── brand_manufacturer.jsonc  # 品牌→主机厂映射（含分组注释）
-    └── categories.json          # 车型分类/levelid
+    ├── categories.json          # 销量分类/levelid
+    └── all_categories.json      # 全类别分类（含跑车/皮卡/微卡/轻客）
 tools/
 └── verify.py        # xlsx 验证（品牌占位符、主机厂后缀）
 docs/
-└── autohome-api.md  # API 完整文档
+├── autohome-api.md  # API 完整文档
+└── specs/           # 设计文档
 ```
