@@ -1,0 +1,133 @@
+"""Collect autohome parameter config tables for all series, organized by manufacturer/brand/model."""
+import time
+import re
+import os
+from collections import defaultdict
+
+from .api import fetch_brand_map, fetch_all_series, get_param_config
+from .brands import clean_manu_name, create_manu_map, resolve_brands
+from .excel_writer import write_config_xlsx
+
+OUTPUT_DIR = "D:/Users/huarkiou/Downloads/配置表"
+ONLY_ON_SALE = True  # True=仅在售年款, False=全部年款
+
+
+def parse_config(result):
+    """Parse getParamConf API result into {year_name: (spec_names, param_rows)}."""
+    titlelist = result.get("titlelist", [])
+    datalist = result.get("datalist", [])
+    conditionlist = result.get("conditionlist", [])
+
+    year_options = {}
+    for cond in conditionlist:
+        if cond.get("typevalue") == "year":
+            for y in cond.get("list", []):
+                if not ONLY_ON_SALE or y.get("lazyload") == 0:
+                    year_options[y.get("id")] = y.get("name", "")
+
+    year_specs = defaultdict(list)
+    for spec in datalist:
+        cond = spec.get("condition", [])
+        spec_year = cond[-1] if isinstance(cond, list) and cond else ""
+        if not spec_year or not spec_year.isdigit() or spec_year not in year_options:
+            continue
+        year_specs[spec_year].append(spec)
+
+    output = {}
+    for year_id, specs in year_specs.items():
+        year_name = year_options.get(year_id, f"{year_id}款")
+        param_rows = []
+        for group in titlelist:
+            group_name = group.get("itemtype", "")
+            for item in group.get("items", []):
+                tid = item.get("titleid")
+                pname = item.get("itemname", "")
+                values = []
+                for spec in specs:
+                    val = ""
+                    for p in spec.get("paramconflist", []):
+                        if p.get("titleid") == tid:
+                            val = p.get("itemname", "")
+                            break
+                    values.append(val)
+                param_rows.append((group_name, pname, values))
+        spec_names = [s.get("specname", "") for s in specs]
+        output[year_name] = (spec_names, param_rows)
+
+    return output, year_options
+
+
+def main():
+    print("=== Step 1: Fetching brand list ===")
+    brand_map = fetch_brand_map()
+    manu_map = create_manu_map(brand_map)
+
+    print("=== Step 2: Collecting all series ===")
+    all_series = fetch_all_series()
+    series_by_brand = defaultdict(list)
+    for sid, info in all_series.items():
+        bid = info["brandid"]
+        if bid:
+            series_by_brand[bid].append(sid)
+
+    print("=== Step 3: Resolving brand names ===")
+    resolve_brands(brand_map, manu_map, series_by_brand)
+
+    print(f"\n=== Step 4: Fetching config for {len(all_series)} series ===")
+    stats = {"success": 0, "empty": 0, "error": 0, "skipped": 0}
+
+    for i, (sid, info) in enumerate(sorted(all_series.items())):
+        series_name = info["name"]
+        brandid = info["brandid"]
+        brand_name = brand_map.get(brandid, f"品牌{brandid}")
+        manufacturer = manu_map.get(brandid, clean_manu_name(brand_name))
+
+        safe_name = re.sub(r'[\\/:*?"<>|]', '_', series_name)
+        dir_path = os.path.join(OUTPUT_DIR, manufacturer, brand_name)
+        filepath = os.path.join(dir_path, f"{safe_name}.xlsx")
+
+        if os.path.exists(filepath):
+            tmp_path = filepath + ".tmp"
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+                os.remove(filepath)
+            else:
+                stats["skipped"] += 1
+                if stats["skipped"] % 50 == 0:
+                    print(f"  skipped {stats['skipped']} existing files...")
+                continue
+
+        print(f"  [{i+1}/{len(all_series)}] {series_name} (sid={sid})", end=" ")
+
+        result = get_param_config(sid)
+        if not result:
+            print("ERROR")
+            stats["error"] += 1
+            time.sleep(0.3)
+            continue
+
+        config_data, year_options = parse_config(result)
+        if not config_data:
+            print("no on-sale data" if ONLY_ON_SALE else "empty")
+            stats["empty"] += 1
+            time.sleep(0.3)
+            continue
+
+        os.makedirs(dir_path, exist_ok=True)
+        ok = write_config_xlsx(filepath, config_data)
+        if ok:
+            years = list(config_data.keys())
+            print(f"-> {len(years)} years: {', '.join(years)} | {manufacturer}/{brand_name}/{safe_name}.xlsx")
+            stats["success"] += 1
+        else:
+            print("WRITE ERROR")
+            stats["error"] += 1
+
+        time.sleep(0.15)
+
+    print(f"\nDone: {stats['success']} success, {stats['empty']} empty, {stats['error']} errors, {stats['skipped']} skipped")
+    print(f"Output: {OUTPUT_DIR}")
+
+
+if __name__ == "__main__":
+    main()

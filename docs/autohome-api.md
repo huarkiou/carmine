@@ -112,7 +112,7 @@ Referer: https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html
 - 响应编码为 UTF-8，但终端可能显示为 GBK 乱码，始终用 hex 验证: `str.encode('utf-8').hex()`
 - 建议请求间隔 ≥ 150ms 避免限流
 - NextJS build hash (`nextweb-prod-c_1.0.234-p_2.36.0`) 可能随部署更新，失效时从页面源码 `<script id="__NEXT_DATA__">` 中提取最新值
-- `fctName` 去掉末尾品牌名后仍可能含 `汽车`/`集团` 后缀，需二次清洗 (见 `collect.py` 的 `clean_manu_name`)
+- `fctName` 去掉末尾品牌名后仍可能含 `汽车`/`集团` 后缀，需二次清洗 (见 `src/brands.py` 的 `clean_manu_name`)
 
 ## 6. 参数配置 API
 
@@ -139,4 +139,4 @@ Referer: https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html
 **年款判断:** `conditionlist[0].list[]` 含所有年款，`lazyload:0`=在售。
 规格的 `condition` 数组末位为年份值。
 
-**输出脚本:** `config_spec.py`，开关 `ONLY_ON_SALE = True/False` 控制在售/全部年款。
+**输出脚本:** `src/config_spec.py`，开关 `ONLY_ON_SALE = True/False` 控制在售/全部年款。
