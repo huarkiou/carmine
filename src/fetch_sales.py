@@ -8,7 +8,7 @@ from .api import fetch_brand_map, fetch_series, get_months
 from .brands import CATEGORIES, BRAND_TO_MANUFACTURER, create_manu_map, resolve_brands
 from .excel_writer import write_sales_excel
 
-OUTPUT_DIR = "D:/Projects/Program/parse_autohome/output"
+OUTPUT_DIR = "D:/Projects/Program/carmine/output"
 
 
 def main():
