@@ -5,6 +5,9 @@ import os
 from datetime import datetime
 from collections import defaultdict
 
+from openpyxl.cell.rich_text import TextBlock, CellRichText
+from openpyxl.cell.text import InlineFont
+
 from .api import fetch_brand_map, fetch_all_series, get_param_config
 from .brands import clean_manu_name, create_manu_map, resolve_brands
 from .excel_writer import write_config_xlsx
@@ -14,13 +17,26 @@ ONLY_ON_SALE = True  # True=仅在售年款, False=全部年款
 
 
 def _param_value(param_item):
-    """Extract display value from a paramconflist item, handling colorinfo/sublist."""
-    # Color info: use color names joined by newlines
+    """Extract display value from a paramconflist item.
+    
+    Returns str or CellRichText (for color params).
+    """
+    # Color info: return rich text with each color name in its own hex color
     ci = param_item.get("colorinfo")
     if ci and isinstance(ci, dict) and ci.get("list"):
-        names = [c["name"] for c in ci["list"] if c.get("name")]
-        if names:
-            return "\n".join(names)
+        blocks = []
+        for i, c in enumerate(ci["list"]):
+            name = c.get("name", "")
+            hex_color = (c.get("value") or "").lstrip("#")
+            if name:
+                if i > 0:
+                    blocks.append(TextBlock(InlineFont(), "\n"))
+                try:
+                    blocks.append(TextBlock(InlineFont(color=hex_color or "000000"), name))
+                except Exception:
+                    blocks.append(TextBlock(InlineFont(), name))
+        if blocks:
+            return CellRichText(*blocks)
     # Sublist: use sub-item names joined by newlines
     sl = param_item.get("sublist")
     if sl and isinstance(sl, list) and sl:
