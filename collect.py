@@ -159,6 +159,15 @@ BRAND_TO_MANUFACTURER = {
     "纵横": "纵横",
     "示界": "示界",
     "埃尚": "埃尚",
+    # 补充映射
+    "江铃集团新能源": "江铃",
+    "知豆电动车": "知豆",
+    "知豆": "知豆",
+    "凯翼": "奇瑞",
+    "合创汽车": "合创",
+    "海马": "一汽",
+    "斯柯达": "上汽大众",
+    "白晔": "白晔",
 }
 
 
@@ -322,7 +331,13 @@ def main():
         all_data[cat_big] = sub_data
 
     print("\n=== Step 4: Filling missing brand names ===")
+    previously_missing = {bid for bid in series_by_brand if bid not in brand_map}
     fill_missing_brands(brand_map, manu_map, series_by_brand)
+    # Re-run manufacturer mapping, prioritizing explicit dict entries over series page data
+    new_manu = create_manu_map(brand_map)
+    for bid in previously_missing:
+        if bid in new_manu:
+            manu_map[bid] = new_manu[bid]
 
     print("\n=== Step 5: Aggregating and building output ===")
     output = {}
