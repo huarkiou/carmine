@@ -1,0 +1,48 @@
+name: Collect Car Data
+
+on:
+  workflow_dispatch:
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Fetch sales ranking
+        run: |
+          mkdir -p output
+          CARMINE_OUTPUT="$PWD/output" uv run python -m src.fetch_sales
+        timeout-minutes: 15
+
+      - name: Fetch specs (top-selling)
+        run: |
+          CARMINE_OUTPUT="$PWD/output" CARMINE_MODE="sales" uv run python -m src.fetch_specs
+        timeout-minutes: 40
+
+      - name: Fetch specs (sports cars)
+        run: |
+          CARMINE_OUTPUT="$PWD/output" CARMINE_MODE="跑车" uv run python -m src.fetch_specs
+        timeout-minutes: 10
+
+      - name: Fetch specs (pickups)
+        run: |
+          CARMINE_OUTPUT="$PWD/output" CARMINE_MODE="皮卡" uv run python -m src.fetch_specs
+        timeout-minutes: 10
+
+      - name: Package output
+        run: zip -r carmine-data.zip output/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: carmine-data
+          path: carmine-data.zip

@@ -14,14 +14,14 @@ from .api import fetch_brand_map, fetch_series, fetch_series_by_level, get_param
 from .brands import clean_manu_name, create_manu_map, resolve_brands
 from .excel_writer import write_config_xlsx
 
-OUTPUT_DIR = "D:/Projects/Program/carmine/output"
+OUTPUT_DIR = os.environ.get("CARMIINE_OUTPUT", "D:/Projects/Program/carmine/output")
 ONLY_ON_SALE = True  # True=仅在售年款, False=全部年款
 
 # Category selection mode:
 #   "sales" → top-selling series only (uses brands.CATEGORIES: 轿车/SUV/MPV)
 #   "all"   → all categories including 跑车/皮卡/微卡/轻客/微面
-#   ["跑车", "皮卡"] → only specified categories
-CATEGORY_MODE = "sales"
+#   "跑车,皮卡" → only specified categories (comma-separated env var)
+CATEGORY_MODE = os.environ.get("CARMIINE_MODE", "sales")
 
 _DATA_DIR = Path(__file__).parent / "data"
 
@@ -34,9 +34,12 @@ def _load_categories(mode):
     if mode == "all":
         with open(_DATA_DIR / "all_categories.json", "r", encoding="utf-8") as f:
             return json.load(f)
-    if isinstance(mode, list):
-        all_cats = json.load(open(_DATA_DIR / "all_categories.json", "r", encoding="utf-8"))
-        return {k: v for k, v in all_cats.items() if k in mode}
+    # comma-separated string → list
+    names = [n.strip() for n in mode.split(",") if n.strip()]
+    if names:
+        with open(_DATA_DIR / "all_categories.json", "r", encoding="utf-8") as f:
+            all_cats = json.load(f)
+        return {k: v for k, v in all_cats.items() if k in names}
     return CATEGORIES
 
 
