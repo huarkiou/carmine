@@ -3,6 +3,10 @@ import time
 import re
 import requests
 
+from .brands import MONTHS, CATEGORIES
+
+LATEST_MONTH = MONTHS[-1]  # "2026-04" — used as default for brand/ref data
+
 # API endpoints
 RANK_API = "https://www.autohome.com.cn/web-main/car/rank/getList"
 CONFIG_API = "https://www.autohome.com.cn/web-main/car/param/getParamConf"
@@ -10,7 +14,7 @@ NEXTJS_DATA = "https://www.autohome.com.cn/_next/data/nextweb-prod-c_1.0.234-p_2
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "Referer": "https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html",
+    "Referer": f"https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/{LATEST_MONTH}.html",
 }
 
 
@@ -22,7 +26,7 @@ def fetch_brand_map():
             "from": 28, "pm": 2, "pluginversion": "11.75.8",
             "model": 1, "channel": 0, "pageindex": page, "pagesize": 200,
             "typeid": 1, "subranktypeid": 3, "entitytype": "1071",
-            "date": "2026-04",
+            "date": LATEST_MONTH,
         }
         try:
             r = requests.get(RANK_API, params=params, headers=HEADERS, timeout=15)
@@ -66,11 +70,10 @@ def fetch_series(levelid, month):
 
 def fetch_all_series():
     """Collect all unique series from ranking data across all categories."""
-    from .brands import CATEGORIES
     all_series = {}
     for cat_big, subcats in CATEGORIES.items():
         for sub_name, levelid in subcats:
-            items = fetch_series(levelid, "2026-04")
+            items = fetch_series(levelid, LATEST_MONTH)
             for item in items:
                 sid = str(item.get("seriesid", ""))
                 if sid and sid not in all_series:
@@ -96,7 +99,6 @@ def get_param_config(seriesid):
 
 def lookup_brand_from_series(brandid, seriesid):
     """Look up brand name and manufacturer from a series detail page (NextJS data)."""
-    from .brands import clean_manu_name
     try:
         url = f"{NEXTJS_DATA}/{seriesid}/.json"
         r = requests.get(url, headers=HEADERS, timeout=10)
@@ -109,6 +111,7 @@ def lookup_brand_from_series(brandid, seriesid):
             if fname and bname and fname.endswith(bname):
                 fname = fname[:-len(bname)]
             if fname:
+                from .brands import clean_manu_name  # deferred to avoid circular import
                 fname = clean_manu_name(fname)
             return bname, fname or bname
     except Exception:
