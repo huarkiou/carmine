@@ -28,11 +28,24 @@ def _param_value(param_item):
         for i, c in enumerate(ci["list"]):
             name = c.get("name", "")
             hex_color = (c.get("value") or "").lstrip("#")
-            if name:
-                if i > 0:
-                    blocks.append(TextBlock(InlineFont(), "\n"))
+            if not name:
+                continue
+            if i > 0:
+                blocks.append(TextBlock(InlineFont(), "\n"))
+            # Handle mixed colors like "黑色/雪隐灰" with "#000000/#E7DDD5"
+            if "/" in name and "/" in hex_color:
+                name_parts = name.split("/")
+                hex_parts = [h.lstrip("#") for h in hex_color.split("/")]
+                for j, (np, hp) in enumerate(zip(name_parts, hex_parts)):
+                    if j > 0:
+                        blocks.append(TextBlock(InlineFont(), "/"))
+                    try:
+                        blocks.append(TextBlock(InlineFont(color="FF" + hp.strip() if hp.strip() else "FF000000"), np.strip()))
+                    except Exception:
+                        blocks.append(TextBlock(InlineFont(), np.strip()))
+            else:
                 try:
-                    blocks.append(TextBlock(InlineFont(color=hex_color or "000000"), name))
+                    blocks.append(TextBlock(InlineFont(color="FF" + hex_color if hex_color else "FF000000"), name))
                 except Exception:
                     blocks.append(TextBlock(InlineFont(), name))
         if blocks:
