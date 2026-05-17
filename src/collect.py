@@ -1,15 +1,23 @@
 """Collect autohome 6-month sales data by vehicle category, output to xlsx."""
 import time
+import os
+from datetime import datetime
 from collections import defaultdict
 
 from .api import fetch_brand_map, fetch_series, get_months
 from .brands import CATEGORIES, BRAND_TO_MANUFACTURER, create_manu_map, resolve_brands
 from .excel_writer import write_sales_excel
 
-OUTPUT = "D:/Users/huarkiou/Downloads/汽车销量排行-近6个月.xlsx"
+OUTPUT_DIR = "D:/Projects/Program/parse_autohome/output"
 
 
 def main():
+    ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+    output_dir = os.path.join(OUTPUT_DIR, ts)
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, "汽车销量排行-近6个月.xlsx")
+    print(f"Output: {output_path}")
+
     print("=== Step 1: Fetching brand list ===")
     brand_map = fetch_brand_map()
 
@@ -87,8 +95,8 @@ def main():
             print(f"  {u}")
 
     print("\n=== Step 6: Writing Excel ===")
-    write_sales_excel(output, OUTPUT)
-    print(f"\nDone: {OUTPUT}")
+    write_sales_excel(output, output_path)
+    print(f"\nDone: {output_path}")
 
 
 if __name__ == "__main__":

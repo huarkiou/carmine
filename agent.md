@@ -38,6 +38,10 @@ resume 时检测残留 .tmp 自动清理重试。
 
 `uv run python tools/verify.py <xlsx路径>` 检查品牌占位符、主机厂后缀命名规范
 
+## 输出
+
+所有脚本输出到 `output/{YYYYMMDDHHMMSSmmm}/`，每次运行自动创建时间戳子目录。
+
 ## 源码结构
 
 ```

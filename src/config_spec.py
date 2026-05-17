@@ -2,14 +2,39 @@
 import time
 import re
 import os
+from datetime import datetime
 from collections import defaultdict
 
 from .api import fetch_brand_map, fetch_all_series, get_param_config
 from .brands import clean_manu_name, create_manu_map, resolve_brands
 from .excel_writer import write_config_xlsx
 
-OUTPUT_DIR = "D:/Users/huarkiou/Downloads/配置表"
+OUTPUT_DIR = "D:/Projects/Program/parse_autohome/output"
 ONLY_ON_SALE = True  # True=仅在售年款, False=全部年款
+
+
+def _param_value(param_item):
+    """Extract display value from a paramconflist item, handling colorinfo/sublist."""
+    # Color info: use color names joined by newlines
+    ci = param_item.get("colorinfo")
+    if ci and isinstance(ci, dict) and ci.get("list"):
+        names = [c["name"] for c in ci["list"] if c.get("name")]
+        if names:
+            return "\n".join(names)
+    # Sublist: use sub-item names joined by newlines
+    sl = param_item.get("sublist")
+    if sl and isinstance(sl, list) and sl:
+        parts = []
+        for sub in sl:
+            if isinstance(sub, dict):
+                name = sub.get("name", "")
+                value = sub.get("value", "")
+                if name:
+                    parts.append(f"{name}: {value}" if value else name)
+        if parts:
+            return "\n".join(parts)
+    # Default: plain itemname
+    return param_item.get("itemname") or ""
 
 
 def parse_config(result):
@@ -47,7 +72,7 @@ def parse_config(result):
                     val = ""
                     for p in spec.get("paramconflist", []):
                         if p.get("titleid") == tid:
-                            val = p.get("itemname", "")
+                            val = _param_value(p)
                             break
                     values.append(val)
                 param_rows.append((group_name, pname, values))
@@ -58,6 +83,9 @@ def parse_config(result):
 
 
 def main():
+    ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]  # YYYYMMDDHHMMSSmmm
+    output_dir = os.path.join(OUTPUT_DIR, ts)
+    print(f"Output directory: {output_dir}")
     print("=== Step 1: Fetching brand list ===")
     brand_map = fetch_brand_map()
     manu_map = create_manu_map(brand_map)
@@ -83,7 +111,7 @@ def main():
         manufacturer = manu_map.get(brandid, clean_manu_name(brand_name))
 
         safe_name = re.sub(r'[\\/:*?"<>|]', '_', series_name)
-        dir_path = os.path.join(OUTPUT_DIR, manufacturer, brand_name)
+        dir_path = os.path.join(output_dir, manufacturer, brand_name)
         filepath = os.path.join(dir_path, f"{safe_name}.xlsx")
 
         if os.path.exists(filepath):
@@ -126,7 +154,7 @@ def main():
         time.sleep(0.15)
 
     print(f"\nDone: {stats['success']} success, {stats['empty']} empty, {stats['error']} errors, {stats['skipped']} skipped")
-    print(f"Output: {OUTPUT_DIR}")
+    print(f"Output: {output_dir}")
 
 
 if __name__ == "__main__":

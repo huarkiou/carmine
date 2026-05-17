@@ -140,3 +140,6 @@ Referer: https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html
 规格的 `condition` 数组末位为年份值。
 
 **输出脚本:** `src/config_spec.py`，开关 `ONLY_ON_SALE = True/False` 控制在售/全部年款。
+输出目录: `output/{YYYYMMDDHHMMSSmmm}/` (自动创建时间戳子目录)。
+
+参数值的 `colorinfo`（颜色）和 `sublist`（多值项如钥匙类型）在 `_param_value()` 中处理，以换行符拼接多值。
