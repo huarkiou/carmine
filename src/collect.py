@@ -2,8 +2,8 @@
 import time
 from collections import defaultdict
 
-from .api import fetch_brand_map, fetch_series
-from .brands import CATEGORIES, MONTHS, BRAND_TO_MANUFACTURER, create_manu_map, resolve_brands
+from .api import fetch_brand_map, fetch_series, get_months
+from .brands import CATEGORIES, BRAND_TO_MANUFACTURER, create_manu_map, resolve_brands
 from .excel_writer import write_sales_excel
 
 OUTPUT = "D:/Users/huarkiou/Downloads/汽车销量排行-近6个月.xlsx"
@@ -17,6 +17,7 @@ def main():
     manu_map = create_manu_map(brand_map)
 
     print("=== Step 3: Collecting 6-month sales data ===")
+    months = get_months(6)
     all_data = {}
     series_by_brand = defaultdict(list)
 
@@ -28,7 +29,7 @@ def main():
         }))
 
         for sub_name, levelid in subcats:
-            for month in MONTHS:
+            for month in months:
                 items = fetch_series(levelid, month)
                 for item in items:
                     sid = str(item.get("seriesid", ""))
