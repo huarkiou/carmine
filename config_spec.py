@@ -129,7 +129,11 @@ def parse_config(result):
 
 
 def write_config_xlsx(filepath, config_data):
-    """Write config data to xlsx. config_data: {year_name: (spec_names, param_rows)}"""
+    """Write config data to xlsx. Uses temp file + atomic rename to prevent partial writes."""
+    tmp_path = filepath + ".tmp"
+    # Clean up any stale temp file from previous interrupted run
+    if os.path.exists(tmp_path):
+        os.remove(tmp_path)
     wb = Workbook()
     wb.remove(wb.active)
 
@@ -192,7 +196,11 @@ def write_config_xlsx(filepath, config_data):
 
         ws.freeze_panes = "B2"
 
-    wb.save(filepath)
+    wb.save(tmp_path)
+    # Atomic rename: only replace final file after successful write
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    os.rename(tmp_path, filepath)
     return True
 
 
@@ -234,10 +242,16 @@ def main():
         dir_path = os.path.join(OUTPUT_DIR, manufacturer, brand_name)
         filepath = os.path.join(dir_path, f"{safe_name}.xlsx")
         if os.path.exists(filepath):
-            stats["skipped"] += 1
-            if stats["skipped"] % 50 == 0:
-                print(f"  skipped {stats['skipped']} existing files...")
-            continue
+            # Check for stale temp file from interrupted previous run
+            tmp_path = filepath + ".tmp"
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+                os.remove(filepath)  # Re-process: existing file may be incomplete
+            else:
+                stats["skipped"] += 1
+                if stats["skipped"] % 50 == 0:
+                    print(f"  skipped {stats['skipped']} existing files...")
+                continue
 
         print(f"  [{i+1}/{len(all_series)}] {series_name} (sid={sid})", end=" ")
 
