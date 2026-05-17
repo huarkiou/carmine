@@ -162,6 +162,9 @@ BRAND_TO_MANUFACTURER = {
 }
 
 
+NEXTJS_DATA = "https://www.autohome.com.cn/_next/data/nextweb-prod-c_1.0.234-p_2.36.0"
+
+
 def fetch_brand_map():
     """Build brandid -> brandname mapping from brand monthly ranking."""
     brand_map = {}
@@ -192,8 +195,48 @@ def fetch_brand_map():
         except Exception as e:
             print(f"  Brand page {page} error: {e}")
         time.sleep(0.3)
-    print(f"Fetched {len(brand_map)} brands")
+    print(f"Fetched {len(brand_map)} brands from ranking")
     return brand_map
+
+
+def lookup_brand_from_series(brandid, seriesid):
+    """Look up brand/manufacturer name from a series detail page."""
+    try:
+        url = f"{NEXTJS_DATA}/{seriesid}/.json"
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        if r.status_code != 200:
+            return None, None
+        info = r.json().get("pageProps", {}).get("seriesBaseInfo", {})
+        bname = info.get("brandName", "")
+        fname = info.get("fctName", "")
+        if bname:
+            # Clean manufacturer: remove brand name suffix from fctName
+            if fname and bname and fname.endswith(bname):
+                fname = fname[:-len(bname)]
+            if fname:
+                fname = clean_manu_name(fname)
+            return bname, fname or bname
+    except Exception:
+        pass
+    return None, None
+
+
+def fill_missing_brands(brand_map, manu_map, series_by_brand):
+    """Fill missing brand names by querying series detail pages."""
+    missing = {bid for bid in series_by_brand if bid not in brand_map}
+    if not missing:
+        return
+    print(f"Filling {len(missing)} missing brands from series detail pages...")
+    for brandid in sorted(missing):
+        # Find first series with this brandid
+        sid = series_by_brand[brandid][0]
+        bname, manu = lookup_brand_from_series(brandid, sid)
+        if bname:
+            brand_map[brandid] = bname
+            if manu:
+                manu_map[brandid] = manu
+            print(f"  brandid={brandid}: brand={bname}, manu={manu}")
+        time.sleep(0.3)
 
 
 def clean_manu_name(name):
@@ -249,6 +292,7 @@ def main():
 
     print("=== Step 3: Collecting 6-month sales data ===")
     all_data = {}
+    series_by_brand = defaultdict(list)  # brandid -> [seriesid, ...]
 
     for cat_big, subcats in CATEGORIES.items():
         print(f"\n--- {cat_big} ---")
@@ -269,12 +313,18 @@ def main():
                     entry["total_sales"] += int(sales)
                     entry["price"] = item.get("priceinfo", "")
                     entry["months"].add(month)
+                    bid = entry["brandid"]
+                    if bid and sid not in series_by_brand[bid]:
+                        series_by_brand[bid].append(sid)
                 time.sleep(0.25)
             print(f"  {sub_name}: {len(sub_data[sub_name])} series")
 
         all_data[cat_big] = sub_data
 
-    print("\n=== Step 4: Aggregating and building output ===")
+    print("\n=== Step 4: Filling missing brand names ===")
+    fill_missing_brands(brand_map, manu_map, series_by_brand)
+
+    print("\n=== Step 5: Aggregating and building output ===")
     output = {}
     unmapped = set()
 
@@ -309,7 +359,7 @@ def main():
         for u in sorted(unmapped):
             print(f"  {u}")
 
-    print("\n=== Step 5: Writing Excel ===")
+    print("\n=== Step 6: Writing Excel ===")
     write_excel(output)
     print(f"\nDone: {OUTPUT}")
 
