@@ -1,7 +1,7 @@
 [project]
-name = "parse-autohome"
+name = "carmine"
 version = "0.1.0"
-description = "Add your description here"
+description = "Autohome sales ranking & config spec scraper with brand/manufacturer mapping"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
