@@ -33,8 +33,11 @@ def _param_value(param_item):
                     parts.append(f"{name}: {value}" if value else name)
         if parts:
             return "\n".join(parts)
-    # Default: plain itemname
-    return param_item.get("itemname") or ""
+    # Default: plain itemname, or "-" if truly empty
+    val = param_item.get("itemname")
+    if val is None or (isinstance(val, str) and val.strip() == ""):
+        return "-"
+    return str(val)
 
 
 def parse_config(result):
