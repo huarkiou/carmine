@@ -171,7 +171,7 @@ def parse_config(result):
 
 
 def main():
-    ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]  # YYYYMMDDHHMMSSmmm
+    ts = datetime.now().strftime("%Y%m%d%H%M")
     output_dir = os.path.join(OUTPUT_DIR, ts)
     print(f"Output directory: {output_dir}")
     print("=== Step 1: Fetching brand list ===")

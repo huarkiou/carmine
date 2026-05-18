@@ -12,7 +12,7 @@ OUTPUT_DIR = os.environ.get("CARMIINE_OUTPUT", "D:/Projects/Program/carmine/outp
 
 
 def main():
-    ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+    ts = datetime.now().strftime("%Y%m%d%H%M")
     output_dir = os.path.join(OUTPUT_DIR, ts)
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "汽车销量排行-近6个月.xlsx")
@@ -84,7 +84,17 @@ def main():
                     "子分类": sub_name,
                 })
             rows.sort(key=lambda x: x["6个月总销量"], reverse=True)
-            rows = rows[:50]
+            # Take top 50, but stop when sales fall below 1/1000 of the #1 model
+            cutoff = 50
+            if rows and rows[0]["6个月总销量"] > 0:
+                threshold = rows[0]["6个月总销量"] / 1000
+                for i, r in enumerate(rows):
+                    if i >= cutoff or r["6个月总销量"] < threshold:
+                        cutoff = i
+                        break
+                else:
+                    cutoff = min(cutoff, len(rows))
+            rows = rows[:cutoff]
             for i, r in enumerate(rows):
                 r["排名"] = i + 1
             output[cat_big].append((sub_name, rows))
