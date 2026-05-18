@@ -53,7 +53,7 @@ def init_db(path="carmine.db"):
     """Initialize database, create tables if needed, return connection."""
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=OFF")  # deferred enforcement for insertion order
+    conn.execute("PRAGMA foreign_keys=OFF")  # OFF allows out-of-order inserts across brands/series tables during bulk load
     conn.executescript(SCHEMA)
     conn.commit()
     return conn
@@ -119,6 +119,7 @@ def replace_spec_params(conn, spec_year_id, params):
     """Delete old params for spec_year_id and insert new ones.
     params: list of (group_name, param_name, spec_index, value)
     """
+    conn.execute("BEGIN")
     conn.execute("DELETE FROM spec_params WHERE spec_year_id=?", (spec_year_id,))
     conn.executemany(
         "INSERT INTO spec_params (spec_year_id, group_name, param_name, spec_index, value) "
