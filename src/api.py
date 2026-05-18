@@ -157,3 +157,78 @@ def lookup_brand_from_series(brandid, seriesid):
     except Exception:
         pass
     return None, None
+
+
+def fetch_brand_index():
+    """Parse grade/carhtml/{A-Z}.html pages to build brand->manufacturer->series tree.
+
+    Returns list of dicts:
+        [{brandid, brand_name, manufacturers: [{name, series: [{seriesid, name}]}]}]
+    """
+    result = []
+    seen_series = set()
+    for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+        url = f"https://www.autohome.com.cn/grade/carhtml/{letter}.html"
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=15)
+            r.encoding = "gb2312"
+        except Exception as e:
+            print(f"  Failed to fetch {url}: {e}")
+            continue
+
+        html = r.text
+        # Each brand is a <dl id="BRANDID">...</dl> block
+        dl_pattern = re.compile(r'<dl id="(\d+)"(.*?)</dl>', re.DOTALL)
+        for m in dl_pattern.finditer(html):
+            brandid = int(m.group(1))
+            section = m.group(2)
+
+            # Brand name from <dt><div><a>...
+            brand_name = ""
+            bm = re.search(r'<dt>.*?<div><a.*?>(.*?)</a>', section, re.DOTALL)
+            if bm:
+                brand_name = bm.group(1).strip()
+
+            # Manufacturers: each <div class="h3-tit"><a>FCT</a></div>
+            # followed by <ul class="rank-list-ul"> with <li id="sSERIESID"> series
+            # Split by h3-tit boundaries
+            parts = re.split(r'(<div class="h3-tit">.*?</div>)', section)
+            current_fct = ""
+            manufacturers = []
+            fct_series = []  # (fct_name, series_list)
+
+            for part in parts:
+                fct_m = re.search(r'class="h3-tit"><a.*?>(.*?)</a>', part)
+                if fct_m:
+                    # Flush previous fct if it had series
+                    if current_fct and fct_series:
+                        manufacturers.append({"name": current_fct, "series": fct_series})
+                        fct_series = []
+                    current_fct = fct_m.group(1).strip()
+                else:
+                    # Look for series in this part
+                    for sm in re.finditer(r'<li id="s(\d+)".*?<h4><a.*?>(.*?)</a>', part, re.DOTALL):
+                        sid = sm.group(1)
+                        sname = sm.group(2).strip()
+                        if sid not in seen_series:
+                            fct_series.append({"seriesid": sid, "name": sname})
+                            seen_series.add(sid)
+
+            # Flush last fct
+            if current_fct and fct_series:
+                manufacturers.append({"name": current_fct, "series": fct_series})
+
+            if brand_name and manufacturers:
+                result.append({
+                    "brandid": brandid,
+                    "brand_name": brand_name,
+                    "manufacturers": manufacturers,
+                })
+
+        time.sleep(0.2)
+
+    total_series = sum(
+        len(s) for b in result for m in b["manufacturers"] for s in m["series"]
+    )
+    print(f"Brand index: {len(result)} brands, {total_series} series")
+    return result
