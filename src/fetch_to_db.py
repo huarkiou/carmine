@@ -11,9 +11,11 @@ import sys
 from .db import init_db
 from .pipeline.sales import run as run_sales
 from .pipeline.specs import run as run_specs
+from .encoding import setup
 
 
 def main():
+    setup()
     parser = argparse.ArgumentParser(description="Collect automotive data into SQLite database")
     sub = parser.add_subparsers(dest="command", required=True)
 
