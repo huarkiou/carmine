@@ -3,7 +3,7 @@ name = "carmine"
 version = "0.1.0"
 description = "Autohome sales ranking & config spec scraper with brand/manufacturer mapping"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
     "json5>=0.14.0",
     "openpyxl>=3.1.5",
