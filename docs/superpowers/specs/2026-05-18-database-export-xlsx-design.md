@@ -89,4 +89,4 @@ def _build_config_data(rows, num_specs):
     return param_rows
 ```
 
-规格名称 `spec_names` 需从 `spec_years` 的 `spec_count` 推断（列 0 到 N-1），可直接用 `["规格" + str(i+1) for i in range(spec_count)]`，因为原 API 中的规格名存储在 `datalist[].specname` 字段，当前数据库未保留。
+规格名称 `spec_names` 从 `spec_years.spec_names_json` 列读取（JSON 数组），无需另建表。
