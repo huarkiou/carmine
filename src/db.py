@@ -46,6 +46,13 @@ CREATE TABLE IF NOT EXISTS spec_params (
     spec_index   INTEGER,
     value        TEXT
 );
+
+CREATE TABLE IF NOT EXISTS spec_names (
+    spec_year_id INTEGER NOT NULL REFERENCES spec_years(id),
+    spec_index   INTEGER NOT NULL,
+    spec_name    TEXT,
+    PRIMARY KEY (spec_year_id, spec_index)
+);
 """
 
 
@@ -125,5 +132,20 @@ def replace_spec_params(conn, spec_year_id, params):
         "INSERT INTO spec_params (spec_year_id, group_name, param_name, spec_index, value) "
         "VALUES (?, ?, ?, ?, ?)",
         [(spec_year_id, g, p, i, v) for g, p, i, v in params]
+    )
+    conn.commit()
+
+
+def insert_spec_names(conn, spec_year_id, names):
+    """Insert or replace spec names for a given spec_year_id.
+    
+    Args:
+        conn: sqlite3.Connection
+        spec_year_id: int
+        names: list of str, indexed by spec_index (names[i] = spec name for column i)
+    """
+    conn.executemany(
+        "INSERT OR REPLACE INTO spec_names (spec_year_id, spec_index, spec_name) VALUES (?, ?, ?)",
+        [(spec_year_id, i, name) for i, name in enumerate(names)]
     )
     conn.commit()
