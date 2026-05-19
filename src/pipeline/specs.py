@@ -12,7 +12,7 @@ from ..api import (
     get_param_config, get_latest_month,
 )
 from ..brands import CATEGORIES, clean_manu_name, create_manu_map, resolve_brands
-from ..db import upsert_brand, upsert_series, insert_spec_year, replace_spec_params
+from ..db import upsert_brand, upsert_series, insert_spec_year, replace_spec_params, insert_spec_names
 
 ONLY_ON_SALE = True
 
@@ -109,6 +109,7 @@ def run(conn, mode="sales"):
                 continue
             params = _flatten_params(param_rows, len(spec_names))
             replace_spec_params(conn, sy_id, params)
+            insert_spec_names(conn, sy_id, spec_names)
 
         years = list(config_data.keys())
         print(f"-> {len(years)} years: {', '.join(years)} | {manu}/{brand_name}/{series_name}")
