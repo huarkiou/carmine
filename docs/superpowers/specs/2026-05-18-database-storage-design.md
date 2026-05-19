@@ -103,6 +103,17 @@ value         TEXT                -- 参数值（纯文本，无颜色）
 
 写入方式：先 `DELETE FROM spec_params WHERE spec_year_id = ?`，再批量 insert，以处理规格变更。
 
+### spec_names — 规格名称
+
+```
+spec_year_id  INTEGER NOT NULL REFERENCES spec_years(id)
+spec_index    INTEGER NOT NULL
+spec_name     TEXT                -- "2026款 40 TFSI 豪华动感型"
+PRIMARY KEY (spec_year_id, spec_index)
+```
+
+写入：`INSERT OR REPLACE`，同年款规格名变化时自动更新。
+
 ## 增量更新
 
 - `sales_monthly`: `UNIQUE(seriesid, month)` + `ON CONFLICT DO UPDATE`，只更新排名变化的行

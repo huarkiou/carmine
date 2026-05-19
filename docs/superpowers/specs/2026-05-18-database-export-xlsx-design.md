@@ -89,4 +89,15 @@ def _build_config_data(rows, num_specs):
     return param_rows
 ```
 
-规格名称 `spec_names` 从 `spec_years.spec_names_json` 列读取（JSON 数组），无需另建表。
+规格名称通过 `spec_names` 表获取：
+
+```sql
+spec_names (
+    spec_year_id INTEGER REFERENCES spec_years(id),
+    spec_index   INTEGER,
+    spec_name    TEXT,
+    PRIMARY KEY (spec_year_id, spec_index)
+)
+```
+
+导出时 `spec_params JOIN spec_names ON (spec_year_id, spec_index)` 获取列头名。
