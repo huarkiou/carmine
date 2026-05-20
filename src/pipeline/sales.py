@@ -35,6 +35,14 @@ def run(conn, months=6):
         for sub_name, levelid in subcats:
             count = 0
             for month in month_list:
+                # Skip if this (levelid, month) already has data
+                existing = conn.execute(
+                    "SELECT 1 FROM sales_monthly WHERE levelid=? AND month=? LIMIT 1",
+                    (levelid, month)
+                ).fetchone()
+                if existing:
+                    continue
+
                 items = fetch_series(levelid, month)
                 for item in items:
                     sid_str = str(item.get("seriesid", ""))
@@ -43,7 +51,7 @@ def run(conn, months=6):
                     bid = item.get("brandid", 0)
 
                     sales_rows.append((
-                        sid, month, sales,
+                        sid, month, levelid, sales,
                         item.get("rankNum"),
                         today,
                     ))
