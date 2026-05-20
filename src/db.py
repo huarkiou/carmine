@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS sales_monthly (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     seriesid   INTEGER NOT NULL,
     month      TEXT    NOT NULL,
+    levelid    TEXT    NOT NULL DEFAULT '',
     sales      INTEGER NOT NULL DEFAULT 0,
     rank       INTEGER,
     fetched_at TEXT    NOT NULL,
@@ -62,6 +63,11 @@ def init_db(path="output/carmine.db"):
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=OFF")  # OFF allows out-of-order inserts across brands/series tables during bulk load
     conn.executescript(SCHEMA)
+    # Migration: add levelid column if missing (v2)
+    try:
+        conn.execute("ALTER TABLE sales_monthly ADD COLUMN levelid TEXT NOT NULL DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass  # column already exists
     conn.commit()
     return conn
 
@@ -95,10 +101,10 @@ def upsert_series(conn, seriesid, brandid, name, category="", price_range="", st
 
 
 def insert_sales_batch(conn, rows):
-    """Batch insert/update sales. rows: list of (seriesid, month, sales, rank, fetched_at)."""
+    """Batch insert/update sales. rows: list of (seriesid, month, levelid, sales, rank, fetched_at)."""
     sql = """
-        INSERT INTO sales_monthly (seriesid, month, sales, rank, fetched_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO sales_monthly (seriesid, month, levelid, sales, rank, fetched_at)
+        VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(seriesid, month) DO UPDATE SET
             sales=excluded.sales,
             rank=COALESCE(excluded.rank, sales_monthly.rank),
