@@ -30,7 +30,7 @@ def main():
     sub.add_parser("all", help="Export both sales and specs (default params)")
 
     args = parser.parse_args()
-    conn = init_db("carmine.db")
+    conn = init_db("output/carmine.db")
 
     try:
         if args.command == "sales":

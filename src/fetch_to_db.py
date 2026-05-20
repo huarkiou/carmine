@@ -32,7 +32,7 @@ def main():
                        help="Number of recent months for sales (1-6, default 6)")
 
     args = parser.parse_args()
-    conn = init_db("carmine.db")
+    conn = init_db("output/carmine.db")
 
     try:
         if args.command == "sales":

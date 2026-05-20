@@ -171,7 +171,7 @@ def fetch_brand_index():
         url = f"https://www.autohome.com.cn/grade/carhtml/{letter}.html"
         try:
             r = requests.get(url, headers=HEADERS, timeout=15)
-            r.encoding = "gb2312"
+            r.encoding = "gbk"
         except Exception as e:
             print(f"  Failed to fetch {url}: {e}")
             continue

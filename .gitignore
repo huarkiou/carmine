@@ -9,8 +9,3 @@ wheels/
 # Virtual environments
 .venv
 output/
-
-# Database
-carmine.db
-carmine.db-wal
-carmine.db-shm

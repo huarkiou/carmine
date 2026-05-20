@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS spec_names (
 """
 
 
-def init_db(path="carmine.db"):
+def init_db(path="output/carmine.db"):
     """Initialize database, create tables if needed, return connection."""
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL")
