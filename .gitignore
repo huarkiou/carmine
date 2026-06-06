@@ -9,3 +9,6 @@ wheels/
 # Virtual environments
 .venv
 output/
+
+# Playwright
+.playwright-cli/
