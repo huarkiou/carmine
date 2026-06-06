@@ -188,11 +188,6 @@ class TestParseConfig:
             assert isinstance(param_rows, list)
             assert len(spec_names) > 0
 
-    def test_only_on_sale_filters_years(self, config_3170):
-        result_on_sale, _ = parse_config(config_3170, only_on_sale=True)
-        result_all, _ = parse_config(config_3170, only_on_sale=False)
-        assert len(result_all) >= len(result_on_sale)
-
     def test_empty_response_returns_empty_dict(self):
         empty = {"titlelist": [], "datalist": [], "conditionlist": []}
         result, _ = parse_config(empty)
@@ -237,13 +232,13 @@ class TestFlattenParams:
         assert result[0][3] == "红色/蓝色"
 ```
 
-- [ ] **第 3 步：运行测试 —— 预期全部通过**
+- [ ] **第 3 步：运行测试 —— 预期 9 个通过（only_on_sale 测试在任务 5 中添加）**
 
 ```bash
 uv run pytest tests/test_pipeline_specs.py -v
 ```
 
-预期：10 passed
+预期：9 passed
 
 - [ ] **第 4 步：提交**
 
@@ -259,13 +254,17 @@ git commit -m "test: add unit tests for parse_config and _flatten_params"
 **文件：**
 - 修改：`src/pipeline/specs.py:27,30,107,226,236`
 
+**文件：**
+- 修改：`src/pipeline/specs.py:27,30,107,226,236`
+- 修改：`tests/test_pipeline_specs.py`（添加 only_on_sale 测试用例）
+
 - [ ] **第 1 步：运行现有测试以确认基线**
 
 ```bash
 uv run pytest tests/test_pipeline_specs.py -v
 ```
 
-预期：10 passed（但 `test_only_on_sale_filters_years` 可能失败，因为它使用了尚未存在的签名）
+预期：9 passed
 
 - [ ] **第 2 步：修改 parse_config 签名（第 226 行）**
 
@@ -329,7 +328,18 @@ ONLY_ON_SALE = True
             print("no on-sale data" if only_on_sale else "empty")
 ```
 
-- [ ] **第 8 步：运行测试**
+- [ ] **第 8 步：添加 only_on_sale 过滤行为的测试用例**
+
+在 `tests/test_pipeline_specs.py` 中，位于 `test_no_conditionlist_returns_empty_dict` 之后、`class TestFlattenParams` 之前，插入：
+
+```python
+    def test_only_on_sale_filters_years(self, config_3170):
+        result_on_sale, _ = parse_config(config_3170, only_on_sale=True)
+        result_all, _ = parse_config(config_3170, only_on_sale=False)
+        assert len(result_all) >= len(result_on_sale)
+```
+
+- [ ] **第 9 步：运行测试**
 
 ```bash
 uv run pytest tests/test_pipeline_specs.py -v
@@ -337,7 +347,7 @@ uv run pytest tests/test_pipeline_specs.py -v
 
 预期：10 passed
 
-- [ ] **第 9 步：提交**
+- [ ] **第 10 步：提交**
 
 ```bash
 git add src/pipeline/specs.py
@@ -765,7 +775,7 @@ rg -nF "out_dir" src/export/sales.py
 
 预期：无匹配结果。
 
-- [ ] **第 4 步：更新第 75 行的字典键，从 "6个月总销量" 改为 "总销量"**
+- [ ] **第 4 步：更新第 75 行的字典键，使其与动态列标题匹配**
 
 将：
 ```python
@@ -773,7 +783,7 @@ rg -nF "out_dir" src/export/sales.py
 ```
 替换为：
 ```python
-                "总销量": sales,
+                f"{months}个月总销量": sales,
 ```
 
 - [ ] **第 5 步：更新第 86 行的排序键**
@@ -784,7 +794,7 @@ rg -nF "out_dir" src/export/sales.py
 ```
 替换为：
 ```python
-            items.sort(key=lambda x: x["总销量"], reverse=True)
+            items.sort(key=lambda x: x[f"{months}个月总销量"], reverse=True)
 ```
 
 - [ ] **第 6 步：更新第 92 行对 write_sales_excel 的调用**
@@ -883,7 +893,8 @@ def run(conn, output_dir=None):
     """
     ts = datetime.now().strftime("%Y%m%d%H%M")
     if output_dir is None:
-        output_dir = os.path.join("output", ts, "配置表")
+        output_dir = os.path.join("output", ts)
+    output_dir = os.path.join(output_dir, "配置表")
     os.makedirs(output_dir, exist_ok=True)
 ```
 
