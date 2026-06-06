@@ -8,7 +8,7 @@ Usage:
 
 import argparse
 
-from .db import init_db
+from .db import init_db, DEFAULT_DB
 from .pipeline.sales import run as run_sales
 from .pipeline.specs import run as run_specs
 from .encoding import setup
@@ -29,6 +29,9 @@ def main():
         choices=range(1, 7),
         help="Number of recent months (1-6, default 6)",
     )
+    p_sales.add_argument(
+        "--db", default=DEFAULT_DB, help="Path to SQLite database file"
+    )
 
     p_specs = sub.add_parser("specs", help="Collect config specs")
     p_specs.add_argument(
@@ -36,6 +39,10 @@ def main():
         choices=["sales", "all"],
         default="sales",
         help="sales=hot-selling series, all=all brands (default sales)",
+    )
+    p_specs.add_argument("--all-years", action="store_true", help="Include discontinued model years")
+    p_specs.add_argument(
+        "--db", default=DEFAULT_DB, help="Path to SQLite database file"
     )
 
     p_all = sub.add_parser("all", help="Collect both sales and specs")
@@ -46,18 +53,22 @@ def main():
         choices=range(1, 7),
         help="Number of recent months for sales (1-6, default 6)",
     )
+    p_all.add_argument("--all-years", action="store_true", help="Include discontinued model years")
+    p_all.add_argument(
+        "--db", default=DEFAULT_DB, help="Path to SQLite database file"
+    )
 
     args = parser.parse_args()
-    conn = init_db("output/carmine.db")
+    conn = init_db(args.db)
 
     try:
         if args.command == "sales":
             run_sales(conn, months=args.months)
         elif args.command == "specs":
-            run_specs(conn, mode=args.mode)
+            run_specs(conn, mode=args.mode, only_on_sale=not args.all_years)
         elif args.command == "all":
             run_sales(conn, months=args.months)
-            run_specs(conn, mode="sales")
+            run_specs(conn, mode="sales", only_on_sale=not args.all_years)
     finally:
         conn.close()
 
