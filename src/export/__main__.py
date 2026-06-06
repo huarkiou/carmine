@@ -34,7 +34,7 @@ def main():
         "--db", default=DEFAULT_DB, help="Path to input SQLite database"
     )
     p_sales.add_argument(
-        "--output", default="output", help="Output directory for xlsx files"
+        "--output", default=None, help="Output directory for xlsx files"
     )
 
     p_specs = sub.add_parser("specs", help="Export all config specs as xlsx")
@@ -42,7 +42,7 @@ def main():
         "--db", default=DEFAULT_DB, help="Path to input SQLite database"
     )
     p_specs.add_argument(
-        "--output", default="output", help="Output directory for xlsx files"
+        "--output", default=None, help="Output directory for xlsx files"
     )
 
     p_all = sub.add_parser("all", help="Export both sales and specs (default params)")
@@ -60,7 +60,7 @@ def main():
         "--db", default=DEFAULT_DB, help="Path to input SQLite database"
     )
     p_all.add_argument(
-        "--output", default="output", help="Output directory for xlsx files"
+        "--output", default=None, help="Output directory for xlsx files"
     )
 
     args = parser.parse_args()
