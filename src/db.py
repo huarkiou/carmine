@@ -1,4 +1,5 @@
 """SQLite database schema, connection management, and CRUD operations."""
+
 import sqlite3
 
 SCHEMA = """
@@ -61,11 +62,15 @@ def init_db(path="output/carmine.db"):
     """Initialize database, create tables if needed, return connection."""
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=OFF")  # OFF allows out-of-order inserts across brands/series tables during bulk load
+    conn.execute(
+        "PRAGMA foreign_keys=OFF"
+    )  # OFF allows out-of-order inserts across brands/series tables during bulk load
     conn.executescript(SCHEMA)
     # Migration: add levelid column if missing (v2)
     try:
-        conn.execute("ALTER TABLE sales_monthly ADD COLUMN levelid TEXT NOT NULL DEFAULT ''")
+        conn.execute(
+            "ALTER TABLE sales_monthly ADD COLUMN levelid TEXT NOT NULL DEFAULT ''"
+        )
     except sqlite3.OperationalError:
         pass  # column already exists
     conn.commit()
@@ -74,20 +79,26 @@ def init_db(path="output/carmine.db"):
 
 def upsert_brand(conn, brandid, name, manufacturer, seen_date):
     """Insert or update a brand record."""
-    conn.execute("""
+    conn.execute(
+        """
         INSERT INTO brands (brandid, name, manufacturer, first_seen, last_seen)
         VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(brandid) DO UPDATE SET
             name=COALESCE(NULLIF(excluded.name,''), brands.name),
             manufacturer=COALESCE(NULLIF(excluded.manufacturer,''), brands.manufacturer),
             last_seen=excluded.last_seen
-    """, (brandid, name, manufacturer, seen_date, seen_date))
+    """,
+        (brandid, name, manufacturer, seen_date, seen_date),
+    )
     conn.commit()
 
 
-def upsert_series(conn, seriesid, brandid, name, category="", price_range="", status="在售"):
+def upsert_series(
+    conn, seriesid, brandid, name, category="", price_range="", status="在售"
+):
     """Insert or update a series record without wiping existing non-empty fields."""
-    conn.execute("""
+    conn.execute(
+        """
         INSERT INTO series (seriesid, brandid, name, category, price_range, status)
         VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(seriesid) DO UPDATE SET
@@ -96,7 +107,9 @@ def upsert_series(conn, seriesid, brandid, name, category="", price_range="", st
             category=COALESCE(NULLIF(excluded.category,''), series.category),
             price_range=COALESCE(NULLIF(excluded.price_range,''), series.price_range),
             status=excluded.status
-    """, (seriesid, brandid or 0, name, category, price_range, status))
+    """,
+        (seriesid, brandid or 0, name, category, price_range, status),
+    )
     conn.commit()
 
 
@@ -116,14 +129,17 @@ def insert_sales_batch(conn, rows):
 
 def insert_spec_year(conn, seriesid, year_name, spec_count, fetched_at):
     """Insert a spec year (or ignore if exists). Return id."""
-    conn.execute("""
+    conn.execute(
+        """
         INSERT OR IGNORE INTO spec_years (seriesid, year_name, spec_count, fetched_at)
         VALUES (?, ?, ?, ?)
-    """, (seriesid, year_name, spec_count, fetched_at))
+    """,
+        (seriesid, year_name, spec_count, fetched_at),
+    )
     conn.commit()
     row = conn.execute(
         "SELECT id FROM spec_years WHERE seriesid=? AND year_name=?",
-        (seriesid, year_name)
+        (seriesid, year_name),
     ).fetchone()
     return row[0] if row else None
 
@@ -137,14 +153,14 @@ def replace_spec_params(conn, spec_year_id, params):
     conn.executemany(
         "INSERT INTO spec_params (spec_year_id, group_name, param_name, spec_index, value) "
         "VALUES (?, ?, ?, ?, ?)",
-        [(spec_year_id, g, p, i, v) for g, p, i, v in params]
+        [(spec_year_id, g, p, i, v) for g, p, i, v in params],
     )
     conn.commit()
 
 
 def insert_spec_names(conn, spec_year_id, names):
     """Insert or replace spec names for a given spec_year_id.
-    
+
     Args:
         conn: sqlite3.Connection
         spec_year_id: int
@@ -152,6 +168,6 @@ def insert_spec_names(conn, spec_year_id, names):
     """
     conn.executemany(
         "INSERT OR REPLACE INTO spec_names (spec_year_id, spec_index, spec_name) VALUES (?, ?, ?)",
-        [(spec_year_id, i, name) for i, name in enumerate(names)]
+        [(spec_year_id, i, name) for i, name in enumerate(names)],
     )
     conn.commit()

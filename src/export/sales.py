@@ -1,4 +1,5 @@
 """Export sales data from database to xlsx."""
+
 import os
 from datetime import datetime
 from collections import defaultdict
@@ -23,17 +24,21 @@ def run(conn, months=6, top=50, output_dir=None):
     os.makedirs(out_dir, exist_ok=True)
 
     # Get available months from DB
-    months_list = [row[0] for row in conn.execute(
-        "SELECT DISTINCT month FROM sales_monthly ORDER BY month DESC LIMIT ?",
-        (months,)
-    ).fetchall()]
+    months_list = [
+        row[0]
+        for row in conn.execute(
+            "SELECT DISTINCT month FROM sales_monthly ORDER BY month DESC LIMIT ?",
+            (months,),
+        ).fetchall()
+    ]
     if not months_list:
         print("No sales data found in database.")
         return
     cutoff = months_list[-1]
 
     # Aggregate sales by series
-    rows = conn.execute("""
+    rows = conn.execute(
+        """
         SELECT s.seriesid, s.name AS series_name, s.category,
                b.name AS brand_name, b.manufacturer,
                SUM(sm.sales) AS total_sales,
@@ -44,10 +49,13 @@ def run(conn, months=6, top=50, output_dir=None):
         WHERE sm.month >= ?
         GROUP BY s.seriesid
         ORDER BY total_sales DESC
-    """, (cutoff,)).fetchall()
+    """,
+        (cutoff,),
+    ).fetchall()
 
     # Build sub->main category mapping
     from ..brands import CATEGORIES
+
     sub_to_main = {}
     for main, subcats in CATEGORIES.items():
         for name, _ in subcats:
@@ -59,14 +67,16 @@ def run(conn, months=6, top=50, output_dir=None):
         if not cat:
             continue
         main_cat = sub_to_main.get(cat, cat)
-        cats[main_cat][cat].append({
-            "车型名称": sname,
-            "品牌": bname or "未知",
-            "主机厂": manu or bname or "未知",
-            "6个月总销量": sales,
-            "价格区间": price or "",
-            "子分类": cat,
-        })
+        cats[main_cat][cat].append(
+            {
+                "车型名称": sname,
+                "品牌": bname or "未知",
+                "主机厂": manu or bname or "未知",
+                "6个月总销量": sales,
+                "价格区间": price or "",
+                "子分类": cat,
+            }
+        )
 
     # Build output structure
     output = {}

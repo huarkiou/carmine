@@ -1,4 +1,5 @@
 """Brand-to-manufacturer mapping, name cleaning, and lookup logic."""
+
 import json
 import time
 from pathlib import Path
@@ -31,7 +32,7 @@ def clean_manu_name(name):
         return name
     for suffix in ["汽车制造厂", "汽车", "集团"]:
         if name.endswith(suffix) and len(name) > len(suffix):
-            name = name[:-len(suffix)]
+            name = name[: -len(suffix)]
     return name
 
 

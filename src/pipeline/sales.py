@@ -1,4 +1,5 @@
 """Sales data collection pipeline — fetches rankings and writes to database."""
+
 import time
 from datetime import datetime
 from collections import defaultdict
@@ -38,7 +39,7 @@ def run(conn, months=6):
                 # Skip if this (levelid, month) already has data
                 existing = conn.execute(
                     "SELECT 1 FROM sales_monthly WHERE levelid=? AND month=? LIMIT 1",
-                    (levelid, month)
+                    (levelid, month),
                 ).fetchone()
                 if existing:
                     continue
@@ -50,11 +51,16 @@ def run(conn, months=6):
                     sales = int(item.get("salecount", 0) or 0)
                     bid = item.get("brandid", 0)
 
-                    sales_rows.append((
-                        sid, month, levelid, sales,
-                        item.get("rankNum"),
-                        today,
-                    ))
+                    sales_rows.append(
+                        (
+                            sid,
+                            month,
+                            levelid,
+                            sales,
+                            item.get("rankNum"),
+                            today,
+                        )
+                    )
 
                     if sid not in series_info:
                         series_info[sid] = {
@@ -85,4 +91,6 @@ def run(conn, months=6):
         insert_sales_batch(conn, sales_rows)
         print(f"  Inserted {len(sales_rows)} sales records")
 
-    print(f"\nDone: {len(brand_map)} brands, {len(series_info)} series, {len(sales_rows)} sales records")
+    print(
+        f"\nDone: {len(brand_map)} brands, {len(series_info)} series, {len(sales_rows)} sales records"
+    )

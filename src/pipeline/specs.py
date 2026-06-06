@@ -1,4 +1,5 @@
 """Specs data collection pipeline — fetches config tables and writes to database."""
+
 import time
 from datetime import datetime
 from collections import defaultdict
@@ -7,11 +8,21 @@ from openpyxl.cell.rich_text import TextBlock, CellRichText
 from openpyxl.cell.text import InlineFont
 
 from ..api import (
-    fetch_brand_map, fetch_brand_index, fetch_series, fetch_series_by_level,
-    get_param_config, get_latest_month,
+    fetch_brand_map,
+    fetch_brand_index,
+    fetch_series,
+    fetch_series_by_level,
+    get_param_config,
+    get_latest_month,
 )
 from ..brands import CATEGORIES, clean_manu_name, create_manu_map, resolve_brands
-from ..db import upsert_brand, upsert_series, insert_spec_year, replace_spec_params, insert_spec_names
+from ..db import (
+    upsert_brand,
+    upsert_series,
+    insert_spec_year,
+    replace_spec_params,
+    insert_spec_names,
+)
 
 ONLY_ON_SALE = True
 
@@ -111,12 +122,16 @@ def run(conn, mode="sales"):
             insert_spec_names(conn, sy_id, spec_names)
 
         years = list(config_data.keys())
-        print(f"-> {len(years)} years: {', '.join(years)} | {manu}/{brand_name}/{series_name}")
+        print(
+            f"-> {len(years)} years: {', '.join(years)} | {manu}/{brand_name}/{series_name}"
+        )
         stats["success"] += 1
         time.sleep(0.15)
 
-    print(f"\nDone: {stats['success']} success, {stats['empty']} empty, "
-          f"{stats['error']} errors, {stats['skipped']} skipped")
+    print(
+        f"\nDone: {stats['success']} success, {stats['empty']} empty, "
+        f"{stats['error']} errors, {stats['skipped']} skipped"
+    )
 
 
 def _build_series_from_categories():
@@ -165,12 +180,28 @@ def _param_value(param_item):
                     if j > 0:
                         blocks.append(TextBlock(InlineFont(), "/"))
                     try:
-                        blocks.append(TextBlock(InlineFont(color="FF" + hp.strip() if hp.strip() else "FF000000"), np.strip()))
+                        blocks.append(
+                            TextBlock(
+                                InlineFont(
+                                    color="FF" + hp.strip()
+                                    if hp.strip()
+                                    else "FF000000"
+                                ),
+                                np.strip(),
+                            )
+                        )
                     except Exception:
                         blocks.append(TextBlock(InlineFont(), np.strip()))
             else:
                 try:
-                    blocks.append(TextBlock(InlineFont(color="FF" + hex_color if hex_color else "FF000000"), name))
+                    blocks.append(
+                        TextBlock(
+                            InlineFont(
+                                color="FF" + hex_color if hex_color else "FF000000"
+                            ),
+                            name,
+                        )
+                    )
                 except Exception:
                     blocks.append(TextBlock(InlineFont(), name))
         if blocks:

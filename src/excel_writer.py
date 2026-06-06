@@ -1,4 +1,5 @@
 """Excel output functions with shared styling constants."""
+
 import os
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -11,8 +12,10 @@ HEADER_ALIGN = Alignment(horizontal="center", vertical="center", wrap_text=True)
 CELL_FONT = Font(name="Arial", size=10)
 CELL_ALIGN = Alignment(vertical="center")
 BORDER = Border(
-    left=Side(style="thin"), right=Side(style="thin"),
-    top=Side(style="thin"), bottom=Side(style="thin"),
+    left=Side(style="thin"),
+    right=Side(style="thin"),
+    top=Side(style="thin"),
+    bottom=Side(style="thin"),
 )
 CONFIG_HEADER_FONT = Font(name="Arial", bold=True, size=10, color="FFFFFF")
 CONFIG_CELL_FONT = Font(name="Arial", size=9)
@@ -23,7 +26,7 @@ CONFIG_GROUP_FONT = Font(name="Arial", bold=True, size=9)
 
 def write_sales_excel(output, filepath):
     """Write aggregated sales ranking data to xlsx.
-    
+
     output: {大类名: [(子分类名, [rows]), ...]}
     """
     wb = Workbook()
@@ -62,7 +65,7 @@ def write_sales_excel(output, filepath):
 
 def write_config_xlsx(filepath, config_data):
     """Write parameter configuration table to xlsx with atomic temp-file write.
-    
+
     config_data: {year_name: (spec_names, param_rows)}
     param_rows: [(group_name, param_name, [spec_values...]), ...]
     """
@@ -107,7 +110,7 @@ def write_config_xlsx(filepath, config_data):
                 cell.border = BORDER
             row_idx += 1
 
-        ws.column_dimensions['A'].width = 22
+        ws.column_dimensions["A"].width = 22
         for ci in range(num_specs):
             ws.column_dimensions[get_column_letter(2 + ci)].width = 18
         ws.freeze_panes = "B2"

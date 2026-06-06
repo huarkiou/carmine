@@ -1,4 +1,5 @@
 """Autohome API endpoints, request helpers, and fetch functions."""
+
 import json
 import time
 import re
@@ -37,12 +38,11 @@ def _get_nextjs_base():
         )
     m = re.search(
         r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>',
-        r.text, re.DOTALL,
+        r.text,
+        re.DOTALL,
     )
     if not m:
-        raise RuntimeError(
-            "Could not find __NEXT_DATA__ script tag on autohome page"
-        )
+        raise RuntimeError("Could not find __NEXT_DATA__ script tag on autohome page")
     nd = json.loads(m.group(1))
     bid = nd.get("buildId", "")
     if not bid:
@@ -51,7 +51,13 @@ def _get_nextjs_base():
     return _nextjs_base
 
 
-_API_PARAMS_FALLBACK = {"from": 28, "pm": 2, "pluginversion": "11.75.8", "model": 1, "channel": 0}
+_API_PARAMS_FALLBACK = {
+    "from": 28,
+    "pm": 2,
+    "pluginversion": "11.75.8",
+    "model": 1,
+    "channel": 0,
+}
 
 
 def _resolve_api_params():
@@ -64,7 +70,9 @@ def _resolve_api_params():
     if _api_params is not None:
         return _api_params
     try:
-        r = requests.get("https://www.autohome.com.cn/rank/", headers=HEADERS, timeout=10)
+        r = requests.get(
+            "https://www.autohome.com.cn/rank/", headers=HEADERS, timeout=10
+        )
         js_urls = set()
         for m in re.finditer(r'src="(https?://[^"]+\.js[^"]*)"', r.text):
             js_urls.add(m.group(1))
@@ -111,9 +119,13 @@ def _fallback_months(count=6):
         month = f"{now.year}-{now.month:02d}"
         params = {
             **_get_api_params(),
-            "pageindex": 1, "pagesize": 1,
-            "typeid": 1, "subranktypeid": 1, "levelid": 1,
-            "price": "0-9000", "date": month,
+            "pageindex": 1,
+            "pagesize": 1,
+            "typeid": 1,
+            "subranktypeid": 1,
+            "levelid": 1,
+            "price": "0-9000",
+            "date": month,
         }
         try:
             r = requests.get(RANK_API, params=params, headers=HEADERS, timeout=10)
@@ -205,8 +217,11 @@ def fetch_brand_map():
     for page in range(1, 3):
         params = {
             **_get_api_params(),
-            "pageindex": page, "pagesize": 200,
-            "typeid": 1, "subranktypeid": 3, "entitytype": "1071",
+            "pageindex": page,
+            "pagesize": 200,
+            "typeid": 1,
+            "subranktypeid": 3,
+            "entitytype": "1071",
             "date": get_latest_month(),
         }
         try:
@@ -237,9 +252,13 @@ def fetch_series(levelid, month):
     """Fetch series ranking list for one level and month (subranktypeid=1)."""
     params = {
         **_get_api_params(),
-        "pageindex": 1, "pagesize": 50,
-        "typeid": 1, "subranktypeid": 1, "levelid": levelid,
-        "price": "0-9000", "date": month,
+        "pageindex": 1,
+        "pagesize": 50,
+        "typeid": 1,
+        "subranktypeid": 1,
+        "levelid": levelid,
+        "price": "0-9000",
+        "date": month,
     }
     try:
         r = requests.get(RANK_API, params=params, headers=HEADERS, timeout=15)
@@ -251,7 +270,7 @@ def fetch_series(levelid, month):
 
 def fetch_series_by_level(levelid):
     """Fetch all series for a given levelid from the price page API.
-    
+
     Used as fallback for categories without sales ranking data (e.g., 皮卡, 轻客).
     """
     try:
@@ -297,9 +316,10 @@ def lookup_brand_from_series(brandid, seriesid):
         fname = info.get("fctName", "")
         if bname:
             if fname and bname and fname.endswith(bname):
-                fname = fname[:-len(bname)]
+                fname = fname[: -len(bname)]
             if fname:
                 from .brands import clean_manu_name  # deferred to avoid circular import
+
                 fname = clean_manu_name(fname)
             return bname, fname or bname
     except Exception:
@@ -332,7 +352,7 @@ def fetch_brand_index():
 
             # Brand name from <dt><div><a>...
             brand_name = ""
-            bm = re.search(r'<dt>.*?<div><a.*?>(.*?)</a>', section, re.DOTALL)
+            bm = re.search(r"<dt>.*?<div><a.*?>(.*?)</a>", section, re.DOTALL)
             if bm:
                 brand_name = bm.group(1).strip()
 
@@ -349,12 +369,16 @@ def fetch_brand_index():
                 if fct_m:
                     # Flush previous fct if it had series
                     if current_fct and fct_series:
-                        manufacturers.append({"name": current_fct, "series": fct_series})
+                        manufacturers.append(
+                            {"name": current_fct, "series": fct_series}
+                        )
                         fct_series = []
                     current_fct = fct_m.group(1).strip()
                 else:
                     # Look for series in this part
-                    for sm in re.finditer(r'<li id="s(\d+)".*?<h4><a.*?>(.*?)</a>', part, re.DOTALL):
+                    for sm in re.finditer(
+                        r'<li id="s(\d+)".*?<h4><a.*?>(.*?)</a>', part, re.DOTALL
+                    ):
                         sid = sm.group(1)
                         sname = sm.group(2).strip()
                         if sid not in seen_series:
@@ -366,11 +390,13 @@ def fetch_brand_index():
                 manufacturers.append({"name": current_fct, "series": fct_series})
 
             if brand_name and manufacturers:
-                result.append({
-                    "brandid": brandid,
-                    "brand_name": brand_name,
-                    "manufacturers": manufacturers,
-                })
+                result.append(
+                    {
+                        "brandid": brandid,
+                        "brand_name": brand_name,
+                        "manufacturers": manufacturers,
+                    }
+                )
 
         time.sleep(0.2)
 

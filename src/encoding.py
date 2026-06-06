@@ -3,6 +3,7 @@
 Call setup() at entry point to avoid garbled Chinese characters when
 stdout is a GBK-coded terminal (cmd.exe / PowerShell).
 """
+
 import sys
 
 

@@ -5,6 +5,7 @@ Usage:
     uv run python -m src.export specs
     uv run python -m src.export all
 """
+
 import argparse
 
 from ..db import init_db
@@ -19,10 +20,16 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_sales = sub.add_parser("sales", help="Export sales ranking")
-    p_sales.add_argument("--months", type=int, default=6, choices=range(1, 7),
-                         help="Number of recent months (1-6, default 6)")
-    p_sales.add_argument("--top", type=int, default=50,
-                         help="Top N per sub-category (default 50)")
+    p_sales.add_argument(
+        "--months",
+        type=int,
+        default=6,
+        choices=range(1, 7),
+        help="Number of recent months (1-6, default 6)",
+    )
+    p_sales.add_argument(
+        "--top", type=int, default=50, help="Top N per sub-category (default 50)"
+    )
 
     sub.add_parser("specs", help="Export all config specs as xlsx")
 

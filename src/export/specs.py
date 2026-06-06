@@ -1,4 +1,5 @@
 """Export config specs from database to xlsx files."""
+
 import os
 import re
 from datetime import datetime
@@ -34,7 +35,7 @@ def run(conn, output_dir=None):
     total = len(series_list)
 
     for i, (sid, sname, bid, bname, manu) in enumerate(series_list, 1):
-        safe_name = re.sub(r'[\\/:*?"<>|]', '_', sname)
+        safe_name = re.sub(r'[\\/:*?"<>|]', "_", sname)
         manu_name = manu or bname or "未知"
         brand_name = bname or "未知"
         dir_path = os.path.join(out_dir, manu_name, brand_name)
@@ -45,7 +46,7 @@ def run(conn, output_dir=None):
         # Get all years for this series
         years = conn.execute(
             "SELECT id, year_name, spec_count FROM spec_years WHERE seriesid=? ORDER BY year_name",
-            (sid,)
+            (sid,),
         ).fetchall()
 
         if not years:
@@ -58,20 +59,23 @@ def run(conn, output_dir=None):
             # Get spec names
             names_rows = conn.execute(
                 "SELECT spec_index, spec_name FROM spec_names WHERE spec_year_id=? ORDER BY spec_index",
-                (sy_id,)
+                (sy_id,),
             ).fetchall()
             spec_names = [row[1] for row in names_rows]
             if len(spec_names) < spec_count:
                 # Fallback for old data without spec_names
-                spec_names = [f"规格{i+1}" for i in range(spec_count)]
+                spec_names = [f"规格{i + 1}" for i in range(spec_count)]
 
             # Get params, ordered by group → param → spec_index
-            params_rows = conn.execute("""
+            params_rows = conn.execute(
+                """
                 SELECT group_name, param_name, spec_index, value
                 FROM spec_params
                 WHERE spec_year_id=?
                 ORDER BY group_name, param_name, spec_index
-            """, (sy_id,)).fetchall()
+            """,
+                (sy_id,),
+            ).fetchall()
 
             if not params_rows:
                 continue
@@ -88,7 +92,9 @@ def run(conn, output_dir=None):
         os.makedirs(dir_path, exist_ok=True)
         ok = write_config_xlsx(filepath, config_data)
         if ok:
-            print(f"-> {len(config_data)} years | {manu_name}/{brand_name}/{safe_name}.xlsx")
+            print(
+                f"-> {len(config_data)} years | {manu_name}/{brand_name}/{safe_name}.xlsx"
+            )
             stats["success"] += 1
         else:
             print("WRITE ERROR")
@@ -99,7 +105,7 @@ def run(conn, output_dir=None):
 
 def _build_param_rows(params_rows, num_specs):
     """Convert flat rows back to wide matrix format.
-    
+
     params_rows: [(group_name, param_name, spec_index, value), ...]
     Returns: [(group_name, param_name, [values...]), ...]
     """
@@ -114,7 +120,4 @@ def _build_param_rows(params_rows, num_specs):
         if idx < num_specs:
             groups[group][pname][idx] = val or "-"
 
-    return [
-        (group, pname, groups[group][pname])
-        for group, pname in param_order
-    ]
+    return [(group, pname, groups[group][pname]) for group, pname in param_order]
