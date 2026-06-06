@@ -1,15 +1,17 @@
-"""Tests for parse_config and _flatten_params."""
-from src.pipeline.specs import parse_config, _flatten_params
+"""Tests for parse_config, _param_value, and _flatten_params."""
+from src.pipeline.specs import parse_config, _param_value, _flatten_params
 
 
 class TestParseConfig:
     def test_returns_years_for_valid_response(self, config_3170):
         result, _ = parse_config(config_3170)
         assert isinstance(result, dict)
-        assert len(result) > 0
+        assert "2026款" in result
+        assert "2025款" in result
 
     def test_keys_match_year_pattern(self, config_3170):
         result, _ = parse_config(config_3170)
+        assert set(result.keys()) == {"2026款", "2025款"}
         for key in result:
             assert key.endswith("款"), f"Key '{key}' should end with '款'"
 
@@ -25,10 +27,23 @@ class TestParseConfig:
         result, _ = parse_config(empty)
         assert result == {}
 
+    def test_lazyload_years_excluded(self, config_3170):
+        result, _ = parse_config(config_3170)
+        assert "2024款" not in result
+        assert "2023款" not in result
+
     def test_no_conditionlist_returns_empty_dict(self):
         no_cond = {"titlelist": [{"itemtype": "基本参数", "items": []}], "datalist": [], "conditionlist": []}
         result, _ = parse_config(no_cond)
         assert result == {}
+
+
+class TestParamValue:
+    def test_param_value_none_itemname(self):
+        assert _param_value({"itemname": None}) == "-"
+
+    def test_param_value_empty_string(self):
+        assert _param_value({"itemname": ""}) == "-"
 
 
 class TestFlattenParams:
@@ -48,6 +63,7 @@ class TestFlattenParams:
         param_rows = [("基本参数", "轴距", ["2700mm"])]
         result = _flatten_params(param_rows, 3)
         assert len(result) == 3
+        assert result[0][3] == "2700mm"
         assert result[1][3] == "-"
         assert result[2][3] == "-"
 
