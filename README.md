@@ -29,13 +29,16 @@ uv sync
 
 # 采集数据到数据库
 uv run python -m src.fetch_to_db sales --months 6    # 最近6个月销量
+uv run python -m src.fetch_to_db sales --db my.db --months 3  # 指定数据库路径
 uv run python -m src.fetch_to_db specs --mode all    # 全品牌配置
+uv run python -m src.fetch_to_db specs --all-years    # 含停售年款
 uv run python -m src.fetch_to_db all                 # 全量（默认参数）
 
 # 从数据库导出 xlsx
 uv run python -m src.export sales --months 6 --top 50
+uv run python -m src.export sales --db my.db --output reports/
 uv run python -m src.export specs
-uv run python -m src.export all
+uv run python -m src.export all --db data/car.db --output out/
 ```
 
 ## 数据库
@@ -64,7 +67,8 @@ output/
 
 ## 配置
 
-| 变量 | 位置 | 说明 | 默认值 |
+| 选项 | 命令 | 说明 | 默认值 |
 |------|------|------|--------|
-| `ONLY_ON_SALE` | `pipeline/specs.py` 顶部 | 仅采集在售年款 | `True` |
-| `CARMIINE_OUTPUT` | 环境变量 | 输出根目录 | `./output` |
+| `--all-years` | `fetch_to_db specs` | 含停售年款 | `False` |
+| `--db` | `fetch_to_db` / `export` | 数据库文件路径 | `./output/carmine.db` |
+| `--output` | `export` | xlsx 输出目录 | `./output` |
