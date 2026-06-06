@@ -57,14 +57,13 @@ def run(conn, mode="sales", only_on_sale=True):
 
     print(f"Collected {total} unique series")
 
-    # Resolve brands for "sales" mode
-    if mode == "sales":
-        series_by_brand = defaultdict(list)
-        for sid, info in all_series.items():
-            bid = info["brandid"]
-            if bid:
-                series_by_brand[bid].append(str(sid))
-        resolve_brands(brand_map, manu_map, series_by_brand)
+    # Resolve brands for all modes
+    series_by_brand = defaultdict(list)
+    for sid, info in all_series.items():
+        bid = info["brandid"]
+        if bid:
+            series_by_brand[bid].append(str(sid))
+    resolve_brands(brand_map, manu_map, series_by_brand)
 
     # Write brands
     for brandid, brand_name in brand_map.items():
