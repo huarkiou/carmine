@@ -187,6 +187,7 @@ def _param_value(param_item):
                             )
                         )
                     except Exception:
+                        print(f"  [warn] bad color value in mixed color: '{c.get('value')}'")
                         blocks.append(TextBlock(InlineFont(), np.strip()))
             else:
                 try:
@@ -199,6 +200,7 @@ def _param_value(param_item):
                         )
                     )
                 except Exception:
+                    print(f"  [warn] bad color value: '{c.get('value')}'")
                     blocks.append(TextBlock(InlineFont(), name))
         if blocks:
             return CellRichText(*blocks)
