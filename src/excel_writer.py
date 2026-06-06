@@ -24,7 +24,7 @@ CONFIG_GROUP_FILL = PatternFill("solid", fgColor="D9E2F3")
 CONFIG_GROUP_FONT = Font(name="Arial", bold=True, size=9)
 
 
-def write_sales_excel(output, filepath):
+def write_sales_excel(output, filepath, months=6):
     """Write aggregated sales ranking data to xlsx.
 
     output: {大类名: [(子分类名, [rows]), ...]}
@@ -32,7 +32,7 @@ def write_sales_excel(output, filepath):
     wb = Workbook()
     wb.remove(wb.active)
 
-    cols = ["排名", "车型名称", "品牌", "主机厂", "6个月总销量", "价格区间", "子分类"]
+    cols = ["排名", "车型名称", "品牌", "主机厂", f"{months}个月总销量", "价格区间", "子分类"]
     widths = [8, 22, 16, 18, 14, 16, 14]
 
     for cat_big, cat_data in output.items():

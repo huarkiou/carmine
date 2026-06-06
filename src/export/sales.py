@@ -6,7 +6,6 @@ from collections import defaultdict
 
 from ..excel_writer import write_sales_excel
 
-OUTPUT_DIR = os.environ.get("CARMIINE_OUTPUT", "output")
 
 
 def run(conn, months=6, top=50, output_dir=None):
@@ -19,9 +18,10 @@ def run(conn, months=6, top=50, output_dir=None):
         output_dir: override output path
     """
     ts = datetime.now().strftime("%Y%m%d%H%M")
-    out_dir = output_dir or os.path.join(OUTPUT_DIR, ts)
-    filepath = os.path.join(out_dir, "汽车销量排行-近6个月.xlsx")
-    os.makedirs(out_dir, exist_ok=True)
+    if output_dir is None:
+        output_dir = os.path.join("output", ts)
+    filepath = os.path.join(output_dir, f"汽车销量排行-近{months}个月.xlsx")
+    os.makedirs(output_dir, exist_ok=True)
 
     # Get available months from DB
     months_list = [
@@ -72,7 +72,7 @@ def run(conn, months=6, top=50, output_dir=None):
                 "车型名称": sname,
                 "品牌": bname or "未知",
                 "主机厂": manu or bname or "未知",
-                "6个月总销量": sales,
+                f"{months}个月总销量": sales,
                 "价格区间": price or "",
                 "子分类": cat,
             }
@@ -83,11 +83,11 @@ def run(conn, months=6, top=50, output_dir=None):
     for main_cat, sub_map in cats.items():
         output[main_cat] = []
         for sub_name, items in sub_map.items():
-            items.sort(key=lambda x: x["6个月总销量"], reverse=True)
+            items.sort(key=lambda x: x[f"{months}个月总销量"], reverse=True)
             items = items[:top]
             for i, r in enumerate(items):
                 r["排名"] = i + 1
             output[main_cat].append((sub_name, items))
 
-    write_sales_excel(output, filepath)
+    write_sales_excel(output, filepath, months)
     print(f"Sales exported: {filepath}")
