@@ -60,7 +60,7 @@ uv run python -m src.export all --db data/car.db --output out/
 output/
 ├── carmine.db                    # SQLite 数据库
 └── {YYYYMMDDHHmm}/
-    ├── 销量排行.xlsx              # 分类别/品牌/主机厂/N个月汇总
+    ├── 汽车销量排行-近{months}个月.xlsx  # 分类别/品牌/主机厂/N个月汇总
     └── 配置表/
         └── {主机厂}/{品牌}/{车型}.xlsx  # 每 sheet 一个年款
 ```
@@ -69,6 +69,6 @@ output/
 
 | 选项 | 命令 | 说明 | 默认值 |
 |------|------|------|--------|
-| `--all-years` | `fetch_to_db specs` | 含停售年款 | `False` |
+| `--all-years` | `fetch_to_db specs / all` | 含停售年款 | `False` |
 | `--db` | `fetch_to_db` / `export` | 数据库文件路径 | `./output/carmine.db` |
 | `--output` | `export` | xlsx 输出目录 | `./output` |
