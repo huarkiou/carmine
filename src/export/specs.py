@@ -7,8 +7,6 @@ from collections import defaultdict
 
 from ..excel_writer import write_config_xlsx
 
-OUTPUT_DIR = os.environ.get("CARMIINE_OUTPUT", "output")
-
 
 def run(conn, output_dir=None):
     """Export all config specs to xlsx files, one per series.
@@ -18,8 +16,10 @@ def run(conn, output_dir=None):
         output_dir: override output path
     """
     ts = datetime.now().strftime("%Y%m%d%H%M")
-    out_dir = output_dir or os.path.join(OUTPUT_DIR, ts, "配置表")
-    os.makedirs(out_dir, exist_ok=True)
+    if output_dir is None:
+        output_dir = os.path.join("output", ts)
+    output_dir = os.path.join(output_dir, "配置表")
+    os.makedirs(output_dir, exist_ok=True)
 
     # Get all series with spec data, with brand/manufacturer info
     series_list = conn.execute("""
@@ -38,7 +38,7 @@ def run(conn, output_dir=None):
         safe_name = re.sub(r'[\\/:*?"<>|]', "_", sname)
         manu_name = manu or bname or "未知"
         brand_name = bname or "未知"
-        dir_path = os.path.join(out_dir, manu_name, brand_name)
+        dir_path = os.path.join(output_dir, manu_name, brand_name)
         filepath = os.path.join(dir_path, f"{safe_name}.xlsx")
 
         print(f"  [{i}/{total}] {sname}", end=" ")
@@ -100,7 +100,7 @@ def run(conn, output_dir=None):
             print("WRITE ERROR")
 
     print(f"\nDone: {stats['success']} success, {stats['empty']} empty")
-    print(f"Output: {out_dir}")
+    print(f"Output: {output_dir}")
 
 
 def _build_param_rows(params_rows, num_specs):
