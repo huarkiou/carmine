@@ -161,3 +161,16 @@ Referer: https://www.autohome.com.cn/rank/1-1-0-0_9000-x-x-x/2026-04.html
 排名页 NextJS 数据的 `pageProps.options.subranklist[0].toplist` 中 `parameter="date"` 的 list 包含可用月份。`_` 分隔的是范围(如`2026-02_2026-04`)，过滤后取前N个单项即得最新月份列表。
 
 对应函数: `src/api.py` 的 `fetch_available_months()`, `get_latest_month()`, `get_months(n)`。
+
+## 8. NextJS Build ID 动态解析
+
+`_get_nextjs_base()` 首次调用时从任意 autohome 页面提取 `__NEXT_DATA__` 中的 `buildId`，构造 NextJS 数据 API 基础 URL。结果缓存于模块变量，后续调用直接复用。失败时抛出 RuntimeError。
+
+无需手动更新 hash —— 每次运行自动同步。
+
+## 9. API 客户端参数动态提取
+
+`_resolve_api_params()` 从 rank 页面加载的 JS 打包文件中正则提取 `{from, pm, pluginversion, model, channel}` 对象。
+这些参数是 autohome App 客户端标识，硬编码在 JS bundle 中。每次运行时动态同步，无需手动更新。
+
+`_get_api_params()` 返回参数副本供 `fetch_brand_map()`、`fetch_series()`、`_fallback_months()` 使用。

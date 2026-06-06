@@ -1,6 +1,5 @@
 """Specs data collection pipeline — fetches config tables and writes to database."""
 import time
-import re
 from datetime import datetime
 from collections import defaultdict
 

@@ -23,6 +23,8 @@
 ## 快速开始
 
 ```bash
+# Windows 用户可直接双击 run.bat 进入交互菜单
+
 uv sync
 
 # 采集数据到数据库

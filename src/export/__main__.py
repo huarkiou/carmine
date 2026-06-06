@@ -6,7 +6,6 @@ Usage:
     uv run python -m src.export all
 """
 import argparse
-import sys
 
 from ..db import init_db
 from ..encoding import setup

@@ -2,7 +2,6 @@
 import json
 import time
 from pathlib import Path
-from collections import defaultdict
 
 import json5
 
@@ -21,8 +20,6 @@ def _load_json(path):
 
 # Vehicle category definitions loaded from data file
 CATEGORIES = _load_json(_DATA_DIR / "categories.json")
-
-MONTHS = ["2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04"]
 
 # brand_name -> manufacturer_name loaded from data file
 BRAND_TO_MANUFACTURER = _load_jsonc(_DATA_DIR / "brand_manufacturer.jsonc")

@@ -74,12 +74,26 @@ autohome 服务器 (UTF-8) → HTTP → Python str (Unicode) → SQLite (UTF-8) 
 
 ## 动态月份
 
-`api.get_months(6)` 从排名页 filter 实时获取最新 N 个月，替代硬编码 MONTHS 列表。
+`api.get_months(6)` 通过 NextJS 数据 API 实时获取最新 N 个月。
+失败时回退到 `_fallback_months()`：从当月起逐个探测 RANK_API 直到找到有数据月份。
+不再使用硬编码 MONTHS 列表。
+
+## 动态 API 参数
+
+所有时效性参数在每次运行时自动从 autohome 当前部署提取，无需手动维护：
+
+| 参数 | 来源 | 机制 |
+|------|------|------|
+| NextJS buildId | 排名页 `__NEXT_DATA__` 标签 | `_get_nextjs_base()` 首次调用时提取，会话缓存 |
+| API 客户端参数 (`from`, `pm`, `pluginversion`) | JS 打包文件 | `_resolve_api_params()` 从 chunk 中正则提取，会话缓存 |
+| 可用月份列表 | NextJS 数据 API / RANK_API 探测 | `fetch_available_months()` / `_fallback_months()` |
+| 最新月份 | `fetch_available_months(1)` | `get_latest_month()` 首次调用后缓存 |
 
 ## 输出
 
 数据库: `output/carmine.db`（已 `.gitignore`）
 导出 xlsx: `output/{YYYYMMDDHHmm}/`
+输出路径可通过环境变量 `CARMIINE_OUTPUT` 覆盖，默认相对路径 `output`。
 
 ## 源码结构
 

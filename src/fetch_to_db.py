@@ -6,7 +6,6 @@ Usage:
     uv run python -m src.fetch_to_db all   [--months N]
 """
 import argparse
-import sys
 
 from .db import init_db
 from .pipeline.sales import run as run_sales

@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from ..excel_writer import write_config_xlsx
 
-OUTPUT_DIR = os.environ.get("CARMIINE_OUTPUT", "D:/Projects/Program/carmine/output")
+OUTPUT_DIR = os.environ.get("CARMIINE_OUTPUT", "output")
 
 
 def run(conn, output_dir=None):
