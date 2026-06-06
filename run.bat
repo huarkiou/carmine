@@ -4,16 +4,16 @@ cd /d "%~dp0"
 
 where uv >nul 2>nul
 if errorlevel 1 (
-    echo [´íÎó] Î´ÕÒµ½ uv£¬ÇëÏÈ°²×°£ºhttps://github.com/astral-sh/uv
+    echo [ï¿½ï¿½ï¿½ï¿½] Î´ï¿½Òµï¿½ uvï¿½ï¿½ï¿½ï¿½ï¿½È°ï¿½×°ï¿½ï¿½https://github.com/astral-sh/uv
     pause
     exit /b 1
 )
 
 if not exist "uv.lock" (
-    echo [ÌáÊ¾] ÕýÔÚ°²×°ÒÀÀµ...
+    echo [ï¿½ï¿½Ê¾] ï¿½ï¿½ï¿½Ú°ï¿½×°ï¿½ï¿½ï¿½ï¿½...
     uv sync
     if errorlevel 1 (
-        echo [´íÎó] ÒÀÀµ°²×°Ê§°Ü
+        echo [ï¿½ï¿½ï¿½ï¿½] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°Ê§ï¿½ï¿½
         pause
         exit /b 1
     )
@@ -23,37 +23,45 @@ if not exist "uv.lock" (
 cls
 echo.
 echo  ==============================
-echo    carmine - Æû³µÐÐÒµÊý¾Ý²É¼¯
+echo    carmine - æ±½è½¦è¡Œä¸šæ•°æ®é‡‡é›†
 echo  ==============================
 echo.
-echo   ²É¼¯ - Ð´ÈëÊý¾Ý¿â
-echo     1. ÏúÁ¿ÅÅÐÐ£¨×î½ü6¸öÔÂ£©
-echo     2. ÅäÖÃ²ÎÊý±í£¨ÈÈÏú³µÏµ£©
-echo     3. ÅäÖÃ²ÎÊý±í£¨È«Æ·ÅÆ£©
-echo     4. È«Á¿²É¼¯£¨ÏúÁ¿+ÅäÖÃ£©
+echo   é‡‡é›† - å†™å…¥æ•°æ®åº“ (é»˜è®¤ output/carmine.db)
+echo     1. é”€é‡æŽ’è¡Œ (è¿‘6ä¸ªæœˆ)
+echo     2. é…ç½®å‚æ•° (çƒ­é”€è½¦ç³»)
+echo     3. é…ç½®å‚æ•° (å…¨å“ç‰Œ)
+echo     4. é…ç½®å‚æ•° (å…¨éƒ¨å“ç‰Œ + åœå”®å¹´æ¬¾)
+echo     5. å…¨é‡é‡‡é›† (é”€é‡ + é…ç½®)
 echo.
-echo   µ¼³ö - Êý¾Ý¿â×ªxlsx
-echo     5. ÏúÁ¿ÅÅÐÐxlsx
-echo     6. ÅäÖÃ²ÎÊý±íxlsx
-echo     7. È«Á¿µ¼³ö
+echo   å¯¼å‡º - æ•°æ®åº“è½¬xlsx (é»˜è®¤ output/{timestamp}/)
+echo     6. é”€é‡æŽ’è¡Œ xlsx
+     7. é…ç½®å‚æ•° xlsx
+echo     8. å…¨é‡å¯¼å‡º
 echo.
-echo   q. ÍË³ö
+echo   q. é€€å‡º
+echo  ==============================
+echo   æç¤º: é«˜çº§é€‰é¡¹è¯·ç›´æŽ¥ç”¨å‘½ä»¤è¡Œ
+echo     --db PATH      æŒ‡å®šæ•°æ®åº“æ–‡ä»¶
+echo     --output PATH  æŒ‡å®šè¾“å‡ºç›®å½•
+echo     --all-years    å«åœå”®å¹´æ¬¾
+echo     --months N     æœˆæ•° (1-6)
 echo  ==============================
 echo.
 
 set choice=
-set /p choice=  Ñ¡Ôñ: 
+set /p choice=  é€‰æ‹©: 
 
 if "%choice%"=="1"  uv run python -m src.fetch_to_db sales --months 6
 if "%choice%"=="2"  uv run python -m src.fetch_to_db specs --mode sales
 if "%choice%"=="3"  uv run python -m src.fetch_to_db specs --mode all
-if "%choice%"=="4"  uv run python -m src.fetch_to_db all --months 6
-if "%choice%"=="5"  uv run python -m src.export sales --months 6 --top 50
-if "%choice%"=="6"  uv run python -m src.export specs
-if "%choice%"=="7"  uv run python -m src.export all
+if "%choice%"=="4"  uv run python -m src.fetch_to_db specs --mode all --all-years
+if "%choice%"=="5"  uv run python -m src.fetch_to_db all --months 6
+if "%choice%"=="6"  uv run python -m src.export sales --months 6 --top 50
+if "%choice%"=="7"  uv run python -m src.export specs
+if "%choice%"=="8"  uv run python -m src.export all
 if /i "%choice%"=="q" exit /b 0
 
 echo.
-echo  -- °´ÈÎÒâ¼ü·µ»Ø²Ëµ¥ --
+echo  -- æŒ‰ä»»æ„é”®è¿”å›žèœå• --
 pause >nul
 goto menu
