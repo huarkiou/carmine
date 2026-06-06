@@ -24,10 +24,7 @@ from ..db import (
     insert_spec_names,
 )
 
-ONLY_ON_SALE = True
-
-
-def run(conn, mode="sales"):
+def run(conn, mode="sales", only_on_sale=True):
     """Collect config specs and write to database.
 
     Args:
@@ -102,9 +99,9 @@ def run(conn, mode="sales"):
             time.sleep(0.3)
             continue
 
-        config_data, _ = parse_config(result)
+        config_data, _ = parse_config(result, only_on_sale)
         if not config_data:
-            print("no on-sale data" if ONLY_ON_SALE else "empty")
+            print("no on-sale data" if only_on_sale else "empty")
             stats["empty"] += 1
             time.sleep(0.3)
             continue
@@ -223,7 +220,7 @@ def _param_value(param_item):
     return str(val)
 
 
-def parse_config(result):
+def parse_config(result, only_on_sale=True):
     """Parse getParamConf API result into {year_name: (spec_names, param_rows)}."""
     titlelist = result.get("titlelist", [])
     datalist = result.get("datalist", [])
@@ -233,7 +230,7 @@ def parse_config(result):
     for cond in conditionlist:
         if cond.get("typevalue") == "year":
             for y in cond.get("list", []):
-                if not ONLY_ON_SALE or y.get("lazyload") == 0:
+                if not only_on_sale or y.get("lazyload") == 0:
                     year_options[y.get("id")] = y.get("name", "")
 
     year_specs = defaultdict(list)

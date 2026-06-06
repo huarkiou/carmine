@@ -37,6 +37,11 @@ class TestParseConfig:
         result, _ = parse_config(no_cond)
         assert result == {}
 
+    def test_only_on_sale_filters_years(self, config_3170):
+        result_on_sale, _ = parse_config(config_3170, only_on_sale=True)
+        result_all, _ = parse_config(config_3170, only_on_sale=False)
+        assert len(result_all) >= len(result_on_sale)
+
 
 class TestParamValue:
     def test_param_value_none_itemname(self):
