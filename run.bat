@@ -4,16 +4,16 @@ cd /d "%~dp0"
 
 where uv >nul 2>nul
 if errorlevel 1 (
-    echo [ï¿½ï¿½ï¿½ï¿½] Î´ï¿½Òµï¿½ uvï¿½ï¿½ï¿½ï¿½ï¿½È°ï¿½×°ï¿½ï¿½https://github.com/astral-sh/uv
+    echo [´íÎó] Î´ÕÒµ½ uv£¬ÇëÏÈ°²×°£ºhttps://github.com/astral-sh/uv
     pause
     exit /b 1
 )
 
 if not exist "uv.lock" (
-    echo [ï¿½ï¿½Ê¾] ï¿½ï¿½ï¿½Ú°ï¿½×°ï¿½ï¿½ï¿½ï¿½...
+    echo [ÌáÊ¾] ÕýÔÚ°²×°ÒÀÀµ...
     uv sync
     if errorlevel 1 (
-        echo [ï¿½ï¿½ï¿½ï¿½] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°Ê§ï¿½ï¿½
+        echo [´íÎó] ÒÀÀµ°²×°Ê§°Ü
         pause
         exit /b 1
     )
@@ -23,33 +23,33 @@ if not exist "uv.lock" (
 cls
 echo.
 echo  ==============================
-echo    carmine - æ±½è½¦è¡Œä¸šæ•°æ®é‡‡é›†
+echo    carmine - Æû³µÐÐÒµÊý¾Ý²É¼¯
 echo  ==============================
 echo.
-echo   é‡‡é›† - å†™å…¥æ•°æ®åº“ (é»˜è®¤ output/carmine.db)
-echo     1. é”€é‡æŽ’è¡Œ (è¿‘6ä¸ªæœˆ)
-echo     2. é…ç½®å‚æ•° (çƒ­é”€è½¦ç³»)
-echo     3. é…ç½®å‚æ•° (å…¨å“ç‰Œ)
-echo     4. é…ç½®å‚æ•° (å…¨éƒ¨å“ç‰Œ + åœå”®å¹´æ¬¾)
-echo     5. å…¨é‡é‡‡é›† (é”€é‡ + é…ç½®)
+echo   ²É¼¯ - Ð´ÈëÊý¾Ý¿â (Ä¬ÈÏ output/carmine.db)
+echo     1. ÏúÁ¿ÅÅÐÐ (½ü6¸öÔÂ)
+echo     2. ÅäÖÃ²ÎÊý (ÈÈÏú³µÏµ)
+echo     3. ÅäÖÃ²ÎÊý (È«Æ·ÅÆ)
+echo     4. ÅäÖÃ²ÎÊý (È«Æ·ÅÆ + Í£ÊÛÄê¿î)
+echo     5. È«Á¿²É¼¯ (ÏúÁ¿ + ÅäÖÃ)
 echo.
-echo   å¯¼å‡º - æ•°æ®åº“è½¬xlsx (é»˜è®¤ output/{timestamp}/)
-echo     6. é”€é‡æŽ’è¡Œ xlsx
-     7. é…ç½®å‚æ•° xlsx
-echo     8. å…¨é‡å¯¼å‡º
+echo   µ¼³ö - Êý¾Ý¿â×ªxlsx (Ä¬ÈÏ output/{timestamp}/)
+echo     6. ÏúÁ¿ÅÅÐÐ xlsx
+echo     7. ÅäÖÃ²ÎÊý xlsx
+echo     8. È«Á¿µ¼³ö
 echo.
-echo   q. é€€å‡º
+echo   q. ÍË³ö
 echo  ==============================
-echo   æç¤º: é«˜çº§é€‰é¡¹è¯·ç›´æŽ¥ç”¨å‘½ä»¤è¡Œ
-echo     --db PATH      æŒ‡å®šæ•°æ®åº“æ–‡ä»¶
-echo     --output PATH  æŒ‡å®šè¾“å‡ºç›®å½•
-echo     --all-years    å«åœå”®å¹´æ¬¾
-echo     --months N     æœˆæ•° (1-6)
+echo   ÌáÊ¾: ¸ß¼¶Ñ¡ÏîÇëÖ±½ÓÓÃÃüÁîÐÐ
+echo     --db PATH      Ö¸¶¨Êý¾Ý¿âÎÄ¼þ
+echo     --output PATH  Ö¸¶¨Êä³öÄ¿Â¼
+echo     --all-years    º¬Í£ÊÛÄê¿î
+echo     --months N     ÔÂÊý (1-6)
 echo  ==============================
 echo.
 
 set choice=
-set /p choice=  é€‰æ‹©: 
+set /p choice=  Ñ¡Ôñ: 
 
 if "%choice%"=="1"  uv run python -m src.fetch_to_db sales --months 6
 if "%choice%"=="2"  uv run python -m src.fetch_to_db specs --mode sales
@@ -62,6 +62,6 @@ if "%choice%"=="8"  uv run python -m src.export all
 if /i "%choice%"=="q" exit /b 0
 
 echo.
-echo  -- æŒ‰ä»»æ„é”®è¿”å›žèœå• --
+echo  -- °´ÈÎÒâ¼ü·µ»Ø²Ëµ¥ --
 pause >nul
 goto menu
